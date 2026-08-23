@@ -1072,7 +1072,7 @@ body.light-theme footer{border-color:#dbe5ef!important}
             Week Settings
         </h4>
 
-        <div class="grid md:grid-cols-4 gap-4">
+        <div class="grid md:grid-cols-5 gap-4">
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
@@ -1087,6 +1087,22 @@ body.light-theme footer{border-color:#dbe5ef!important}
                     class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
                     placeholder="2026"
                 >
+            </div>
+
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                    Season Type
+                </label>
+
+                <select
+                    id="admin-season-type"
+                    class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
+                >
+                    <option value="1">Preseason</option>
+                    <option value="2" selected>Regular Season</option>
+                    <option value="3">Postseason</option>
+                </select>
             </div>
 
 
@@ -3954,6 +3970,12 @@ function selectAdminWeek(week) {
 
 
     document
+        .getElementById('admin-season-type')
+        .value =
+            String(week.season_type || 2);
+
+
+    document
         .getElementById('admin-week-number')
         .value =
             week.week_number || '';
@@ -4021,6 +4043,14 @@ async function createAdminWeek() {
         );
 
 
+    const seasonType =
+        Number(
+            document.getElementById(
+                'admin-season-type'
+            ).value
+        );
+
+
     const weekNumber =
         Number(
             document.getElementById(
@@ -4043,6 +4073,7 @@ async function createAdminWeek() {
 
     if (
         !seasonYear ||
+        !seasonType ||
         !weekNumber ||
         !name ||
         !lockInput
@@ -4071,6 +4102,9 @@ async function createAdminWeek() {
 
                 season_year:
                     seasonYear,
+
+                season_type:
+                    seasonType,
 
                 week_number:
                     weekNumber,
@@ -4142,6 +4176,13 @@ async function updateAdminWeek() {
             ).value
         );
 
+    const seasonType =
+        Number(
+            document.getElementById(
+                'admin-season-type'
+            ).value
+        );
+
     const weekNumber =
         Number(
             document.getElementById(
@@ -4161,6 +4202,7 @@ async function updateAdminWeek() {
 
     if (
         !seasonYear ||
+        !seasonType ||
         !weekNumber ||
         !name ||
         !lockInput
@@ -4183,6 +4225,7 @@ async function updateAdminWeek() {
             .from('weeks')
             .update({
                 season_year: seasonYear,
+                season_type: seasonType,
                 week_number: weekNumber,
                 name: name,
                 picks_lock_at: picksLockAt
@@ -4227,6 +4270,10 @@ function clearAdminWeekForm() {
     document
         .getElementById('admin-season-year')
         .value = '';
+
+    document
+        .getElementById('admin-season-type')
+        .value = '2';
 
     document
         .getElementById('admin-week-number')
@@ -4947,11 +4994,12 @@ async function deleteSelectedAdminWeek() {
 
     async function importNFLWeek() {
         if (!isCommissioner() || !currentAdminWeek) { showToast('Select a week first.','error'); return; }
-        const season=Number(currentAdminWeek.season_year), week=Number(currentAdminWeek.week_number);
+        const season=Number(currentAdminWeek.season_year), week=Number(currentAdminWeek.week_number), seasonType=Number(currentAdminWeek.season_type)||2;
+        const seasonTypeLabel=seasonType===1?'Preseason':seasonType===3?'Postseason':'Regular Season';
         const button=document.querySelector('button[onclick="importNFLWeek()"]');
         if(button){button.disabled=true;button.innerText='Importing...';}
         try{
-            const response=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${season}&seasontype=2&week=${week}`);
+            const response=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${season}&seasontype=${seasonType}&week=${week}`);
             if(!response.ok) throw new Error(`NFL schedule request failed (${response.status}).`);
             const json=await response.json();
             const events=Array.isArray(json.events)?json.events:[];
@@ -4962,7 +5010,7 @@ async function deleteSelectedAdminWeek() {
                 if(!away||!home||!event.date) continue;
                 games.push({id:String(event.id),week_id:currentAdminWeek.id,away_team:away.team?.displayName||away.team?.abbreviation||'Away',home_team:home.team?.displayName||home.team?.abbreviation||'Home',kickoff_at:new Date(event.date).toISOString()});
             }
-            if(!games.length) throw new Error(`No NFL games were returned for ${season}, Week ${week}.`);
+            if(!games.length) throw new Error(`No NFL games were returned for ${season} ${seasonTypeLabel}, Week ${week}.`);
             const {error}=await supabaseClient.from('games').upsert(games,{onConflict:'id'});
             if(error) throw error;
             await loadAdminGames();
@@ -4991,7 +5039,7 @@ async function deleteSelectedAdminWeek() {
             let allQuery = supabaseClient
                 .from('games')
                 .select(
-                    'id, week_id, away_team, home_team, kickoff_at, winner, weeks(season_year, week_number)'
+                    'id, week_id, away_team, home_team, kickoff_at, winner, weeks(season_year, week_number, season_type)'
                 );
 
             if (currentAdminWeek?.id) {
@@ -5059,8 +5107,9 @@ async function deleteSelectedAdminWeek() {
             for (const game of pendingGames) {
                 const season = game.weeks?.season_year;
                 const week = game.weeks?.week_number;
+                const seasonType = game.weeks?.season_type || 2;
                 if (!season || !week) continue;
-                weekGroups.set(`${season}-${week}`, { season, week });
+                weekGroups.set(`${season}-${seasonType}-${week}`, { season, week, seasonType });
             }
 
             if (!weekGroups.size) {
@@ -5073,9 +5122,9 @@ async function deleteSelectedAdminWeek() {
             let tiebreakersUpdated = 0;
             const syncErrors = [];
 
-            for (const { season, week } of weekGroups.values()) {
+            for (const { season, week, seasonType } of weekGroups.values()) {
                 const response = await fetch(
-                    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${season}&seasontype=2&week=${week}`
+                    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${season}&seasontype=${seasonType}&week=${week}`
                 );
 
                 if (!response.ok) {
