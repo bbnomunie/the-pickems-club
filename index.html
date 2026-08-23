@@ -5066,14 +5066,15 @@ async function saveAdminGames() {
     await loadAdminGames();
 
     // If games were entered manually rather than imported, automatically
-    // configure the Monday-night tiebreaker when a Monday game exists.
+    // configure the tiebreaker anchor game(s) (Monday night for
+    // regular/postseason, last game of the week for preseason).
     const { data: savedGames } = await supabaseClient
         .from('games')
         .select('*')
         .eq('week_id', currentAdminWeek.id)
         .order('kickoff_at', { ascending: true });
 
-    await ensureTiebreakerForWeek(currentAdminWeek.id, savedGames || []);
+    await ensureTiebreakerForWeek(currentAdminWeek.id, savedGames || [], currentAdminWeek.season_type);
     await loadAdminTiebreaker();
 
 }
@@ -5169,7 +5170,7 @@ async function deleteSelectedAdminWeek() {
             const {error}=await supabaseClient.from('games').upsert(games,{onConflict:'id'});
             if(error) throw error;
             await loadAdminGames();
-            await ensureTiebreakerForWeek(currentAdminWeek.id,games);
+            await ensureTiebreakerForWeek(currentAdminWeek.id,games,seasonType);
             await loadAdminTiebreaker();
             showToast(`Imported ${games.length} NFL games for ${currentAdminWeek.name}.`,'success');
         }catch(error){console.error(error);showToast('Could not import NFL schedule: '+error.message,'error');}
@@ -5352,9 +5353,11 @@ async function deleteSelectedAdminWeek() {
                     const tbGameIds = tiebreakerGameIds(tbRow);
 
                     // Only proceed if this game is actually part of the
-                    // week's Monday night tiebreaker (there may be more
-                    // than one Monday game, and all of them need a final
-                    // score before the combined total can be computed).
+                    // week's tiebreaker anchor game(s) — Monday night for
+                    // regular/postseason, last game of the week for
+                    // preseason (there can be more than one anchor game,
+                    // and all of them need a final score before the
+                    // combined total can be computed).
                     if (tbRow && tbGameIds.includes(String(game.id))) {
                         const { data: tbGames, error: tbGamesError } = await supabaseClient
                             .from('games')
@@ -5439,6 +5442,29 @@ async function deleteSelectedAdminWeek() {
             .sort((a,b)=>new Date(a.kickoff_at)-new Date(b.kickoff_at));
     }
 
+    // Returns ALL games that share the latest kickoff time for the week
+    // (there can be more than one at the exact same kickoff), sorted by
+    // kickoff time. Used as the tiebreaker anchor for weeks that don't
+    // reliably have a Monday game — e.g. preseason, which can end on a
+    // Thursday, Friday, Saturday, or Sunday depending on the week.
+    function findLastGamesOfWeek(games){
+        const list=(games||[]).filter(g=>g.kickoff_at);
+        if(!list.length)return [];
+        const latest=Math.max(...list.map(g=>new Date(g.kickoff_at).getTime()));
+        return list
+            .filter(g=>new Date(g.kickoff_at).getTime()===latest)
+            .sort((a,b)=>new Date(a.kickoff_at)-new Date(b.kickoff_at));
+    }
+
+    // Picks the tiebreaker anchor game(s) for a week. Regular season and
+    // postseason keep using the Monday night game(s); preseason (season
+    // type 1) doesn't reliably have a Monday game, so it falls back to
+    // the last game(s) of the week by kickoff time.
+    function findTiebreakerGames(games,seasonType){
+        if(Number(seasonType)===1)return findLastGamesOfWeek(games);
+        return findMondayNightGames(games);
+    }
+
     // Normalizes a week_tiebreakers row into an array of game id strings.
     // Falls back to the legacy single `game_id` column for rows created
     // before `game_ids` existed, so old data keeps working.
@@ -5448,19 +5474,19 @@ async function deleteSelectedAdminWeek() {
         return tb.game_id?[String(tb.game_id)]:[];
     }
 
-    async function ensureTiebreakerForWeek(weekId,games=null){
+    async function ensureTiebreakerForWeek(weekId,games=null,seasonType=2){
         if(!weekId)return null;
         if(!games){const {data}=await supabaseClient.from('games').select('*').eq('week_id',weekId).order('kickoff_at');games=data||[];}
-        const mondayGames=findMondayNightGames(games); if(!mondayGames.length)return null;
-        const mondayIds=mondayGames.map(g=>String(g.id));
+        const anchorGames=findTiebreakerGames(games,seasonType); if(!anchorGames.length)return null;
+        const anchorIds=anchorGames.map(g=>String(g.id));
         const {data:existing,error:readError}=await supabaseClient.from('week_tiebreakers').select('*').eq('week_id',weekId).maybeSingle();
         if(readError){console.error(readError);return null;}
         const existingIds=tiebreakerGameIds(existing);
-        const sameGames=existingIds.length===mondayIds.length&&existingIds.every((id,i)=>id===mondayIds[i]);
+        const sameGames=existingIds.length===anchorIds.length&&existingIds.every((id,i)=>id===anchorIds[i]);
         if(existing&&sameGames)return existing;
-        // Keep legacy game_id populated (first Monday game) alongside the
+        // Keep legacy game_id populated (first anchor game) alongside the
         // new game_ids array, for backward compatibility with that column.
-        const {data,error}=await supabaseClient.from('week_tiebreakers').upsert({week_id:weekId,game_id:mondayIds[0],game_ids:mondayIds},{onConflict:'week_id'}).select().single();
+        const {data,error}=await supabaseClient.from('week_tiebreakers').upsert({week_id:weekId,game_id:anchorIds[0],game_ids:anchorIds},{onConflict:'week_id'}).select().single();
         if(error){console.error(error);return null;} return data;
     }
 
@@ -5479,13 +5505,15 @@ async function deleteSelectedAdminWeek() {
         const gameLabel = document.getElementById('tiebreaker-game');
         const result = document.getElementById('tiebreaker-result');
 
-        // Automatically create the week_tiebreakers row from the Monday
-        // game if the Commissioner has already imported the schedule.
-        const tb = await ensureTiebreakerForWeek(currentWeek.id, currentGames);
+        // Automatically create the week_tiebreakers row from the anchor
+        // game(s) if the Commissioner has already imported the schedule.
+        const tb = await ensureTiebreakerForWeek(currentWeek.id, currentGames, currentWeek.season_type);
+        const isPreseason = Number(currentWeek.season_type) === 1;
+        const anchorLabel = isPreseason ? 'final game' : 'Monday night';
 
         if(!tb){
             gameLabel.innerText =
-                'Monday night tiebreaker will appear here when the Commissioner imports this week’s NFL schedule.';
+                `The ${anchorLabel} tiebreaker will appear here when the Commissioner imports this week’s NFL schedule.`;
             if (!tiebreakerDirty) input.value = '';
             input.disabled = true;
             save.disabled = true;
@@ -5513,7 +5541,7 @@ async function deleteSelectedAdminWeek() {
 
         if(!games.length){
             gameLabel.innerText =
-                'Monday night game could not be found. Please contact the Commissioner.';
+                `The ${anchorLabel} game could not be found. Please contact the Commissioner.`;
             if (!tiebreakerDirty) input.value = '';
             input.disabled = true;
             save.disabled = true;
@@ -5527,7 +5555,7 @@ async function deleteSelectedAdminWeek() {
             return `${g.away_team} at ${g.home_team} • ${time.day} ${time.time}`;
         });
         gameLabel.innerText = games.length > 1
-            ? `Combined score across ${games.length} Monday games: ${gameSummaries.join('  +  ')}`
+            ? `Combined score across ${games.length} ${anchorLabel} games: ${gameSummaries.join('  +  ')}`
             : gameSummaries[0];
 
         // Week-wide lock: tiebreaker uses the same picks_lock_at as all other picks.
@@ -5583,12 +5611,13 @@ async function deleteSelectedAdminWeek() {
 
         const tb = await ensureTiebreakerForWeek(
             currentWeek.id,
-            currentGames
+            currentGames,
+            currentWeek.season_type
         );
 
         if(!tb){
             showToast(
-                'The Monday night game has not been added for this week yet.',
+                'The tiebreaker game has not been added for this week yet.',
                 'error'
             );
             return;
@@ -5628,13 +5657,14 @@ async function deleteSelectedAdminWeek() {
         const label=document.getElementById('admin-tiebreaker-game'),input=document.getElementById('admin-actual-total'),results=document.getElementById('admin-tiebreaker-results');
         if(!label||!isCommissioner()||!currentAdminWeek)return;
         const {data:tb}=await supabaseClient.from('week_tiebreakers').select('*').eq('week_id',currentAdminWeek.id).maybeSingle();
-        if(!tb){label.innerText='Import the NFL schedule to detect the Monday night game.';input.value='';results.innerHTML='';return;}
+        const anchorLabel=Number(currentAdminWeek.season_type)===1?'final':'Monday night';
+        if(!tb){label.innerText=`Import the NFL schedule to detect the ${anchorLabel} game.`;input.value='';results.innerHTML='';return;}
         const gameIds=tiebreakerGameIds(tb);
         const {data:games}=await supabaseClient.from('games').select('*').in('id',gameIds);
         if(!games?.length){label.innerText='Tiebreaker game not found.';return;}
         games.sort((a,b)=>new Date(a.kickoff_at)-new Date(b.kickoff_at));
         const summaries=games.map(g=>{const time=formatGameTime(g.kickoff_at);return `${g.away_team} at ${g.home_team} • ${time.day} ${time.time}`;});
-        label.innerText=games.length>1?`Combined score across ${games.length} Monday games: ${summaries.join('  +  ')}`:summaries[0];
+        label.innerText=games.length>1?`Combined score across ${games.length} ${anchorLabel} games: ${summaries.join('  +  ')}`:summaries[0];
         input.value=tb.actual_total??'';
         const {data:picks}=await supabaseClient.from('tiebreaker_picks').select('user_id,predicted_total').eq('week_id',currentAdminWeek.id);
         if(!picks?.length){results.innerHTML='<div class="text-sm text-slate-500">No tiebreaker predictions yet.</div>';return;}
