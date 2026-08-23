@@ -10,6 +10,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
     <style>
         html {
             scroll-behavior: smooth;
@@ -31,6 +33,70 @@
 
         .pick-card:hover {
             transform: translateY(-1px);
+        }
+
+        /* ---- Football: rotates every once in a while, not constantly ----
+           To change the speed: edit --football-spin-duration below.
+           Smaller number = faster (e.g. 4s spins more often than 9s). */
+        :root {
+            --football-spin-duration: 9s;
+        }
+
+        .football-spin {
+            display: inline-block;
+            animation: footballSpin var(--football-spin-duration) ease-in-out infinite;
+            transform-origin: 50% 50%;
+        }
+
+        @keyframes footballSpin {
+            0%, 78% {
+                transform: rotate(0deg);
+            }
+            88% {
+                transform: rotate(360deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .football-spin {
+                animation: none;
+            }
+        }
+
+        /* ---- Logo "draws itself out" letter by letter ---- */
+        .logo-letter {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(6px);
+            animation: drawLetter 0.45s ease forwards;
+        }
+
+        @keyframes drawLetter {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo-letter {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ---- Confetti canvas (leaderboard) ---- */
+        #leaderboard-confetti-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 30;
         }
 
         .team-button {
@@ -183,10 +249,13 @@ body.light-theme footer{border-color:#dbe5ef!important}
                 class="text-left"
             >
                 <div class="flex items-center gap-2">
-                    <span class="text-2xl">🏈</span>
+                    <span class="text-2xl football-spin">🏈</span>
 
                     <div>
-                        <h1 class="font-black tracking-wide text-emerald-400">
+                        <h1
+                            id="header-logo-text"
+                            class="font-black tracking-wide text-emerald-400"
+                        >
                             THE PICKEMS CLUB
                         </h1>
 
@@ -246,7 +315,7 @@ body.light-theme footer{border-color:#dbe5ef!important}
 
             <div class="text-center mb-8">
 
-                <div class="text-5xl mb-4">
+                <div class="text-5xl mb-4 football-spin">
                     🏈
                 </div>
 
@@ -730,8 +799,10 @@ body.light-theme footer{border-color:#dbe5ef!important}
 
         <div
             id="view-leaderboard"
-            class="hidden space-y-5"
+            class="hidden space-y-5 relative"
         >
+
+            <canvas id="leaderboard-confetti-canvas"></canvas>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
 
@@ -1323,6 +1394,31 @@ const supabaseClient = supabase.createClient(
     let currentUser = null;
     let currentProfile = null;
 
+    // Shared clock so every .football-spin element rotates in lockstep,
+    // even if one was just un-hidden (e.g. logging out reveals the
+    // login-screen football while the header football never stopped).
+    // Without this, display:none/hidden resets that element's animation
+    // to frame 0, so it drifts out of phase with ones already running.
+    const footballSpinStartTime = performance.now();
+
+    function syncFootballSpin() {
+        const durationMs =
+            parseFloat(
+                getComputedStyle(document.documentElement)
+                    .getPropertyValue('--football-spin-duration')
+            ) * 1000 || 9000;
+
+        const elapsedMs =
+            (performance.now() - footballSpinStartTime) % durationMs;
+
+        document.querySelectorAll('.football-spin').forEach((el) => {
+            // A negative delay equal to elapsed time makes the animation
+            // pick up exactly where it "should" be on the shared clock,
+            // instead of restarting from 0%.
+            el.style.animationDelay = '-' + (elapsedMs / 1000) + 's';
+        });
+    }
+
     let weeks = [];
     let currentWeek = null;
     let currentGames = [];
@@ -1634,7 +1730,27 @@ const supabaseClient = supabase.createClient(
 
          initializeCommissionerUI();
          switchTab('picks');
+         animateLogoDrawIn();
+         syncFootballSpin();
        }
+
+    // Redraws "THE PICKEMS CLUB" one letter at a time. Safe to call
+    // more than once (e.g. re-login) since it just rebuilds the spans.
+    function animateLogoDrawIn() {
+        const el = document.getElementById('header-logo-text');
+        if (!el) return;
+
+        const text = el.textContent.trim();
+        el.innerHTML = '';
+
+        text.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.className = 'logo-letter';
+            span.style.animationDelay = (i * 0.045) + 's';
+            span.textContent = char === ' ' ? '\u00A0' : char;
+            el.appendChild(span);
+        });
+    }
 
     function showAuthScreen() {
         const authScreen = document.getElementById('auth-screen');
@@ -1660,6 +1776,8 @@ const supabaseClient = supabase.createClient(
         if (picks) picks.classList.remove('hidden');
         if (leaderboard) leaderboard.classList.add('hidden');
         if (commissioner) commissioner.classList.add('hidden');
+
+        syncFootballSpin();
     }
 
 
@@ -3318,6 +3436,7 @@ const supabaseClient = supabase.createClient(
             if (buttons.leaderboard) buttons.leaderboard.className = 'pb-3 border-b-2 border-blue-500 text-blue-600 font-bold';
             document.getElementById('pool-payment-card')?.classList.add('hidden');
             loadLeaderboard();
+            triggerLeaderboardConfetti();
         } else if (tab === 'chat') {
             views.chat?.classList.remove('hidden');
             if (buttons.chat) buttons.chat.className = 'pb-3 border-b-2 border-blue-500 text-blue-600 font-bold relative';
@@ -3334,6 +3453,42 @@ const supabaseClient = supabase.createClient(
             loadPlayerManagement();
             loadAdminPoolSettings();
         }
+    }
+
+    // Drops a burst of confetti down over the leaderboard section.
+    // Confined to its own canvas so it never covers other tabs/content.
+    let leaderboardConfettiCannon = null;
+
+    function triggerLeaderboardConfetti() {
+        if (typeof confetti === 'undefined') return;
+
+        const canvas = document.getElementById('leaderboard-confetti-canvas');
+        if (!canvas) return;
+
+        if (!leaderboardConfettiCannon) {
+            leaderboardConfettiCannon = confetti.create(canvas, {
+                resize: true,
+                useWorker: true
+            });
+        }
+
+        const colors = ['#10b981', '#facc15', '#3b82f6', '#f472b6', '#f8fafc'];
+
+        // Several small drops across the top so it reads as confetti
+        // falling down into the section, rather than one center burst.
+        [0.15, 0.35, 0.5, 0.65, 0.85].forEach((x, i) => {
+            setTimeout(() => {
+                leaderboardConfettiCannon({
+                    particleCount: 30,
+                    startVelocity: 18,
+                    spread: 70,
+                    gravity: 0.9,
+                    ticks: 220,
+                    origin: { x, y: -0.05 },
+                    colors
+                });
+            }, i * 90);
+        });
     }
 
     function updateChatUnreadBadge() {
