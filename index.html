@@ -734,11 +734,11 @@ body.light-theme footer{border-color:#dbe5ef!important}
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-lg font-black text-white">🌕 Monday Night Tiebreaker</h3>
+                            <h3 id="tiebreaker-title" class="text-lg font-black text-white">🌕 Monday Night Tiebreaker</h3>
                             <span id="tiebreaker-lock-status" class="text-[10px] uppercase tracking-wider rounded-full px-2 py-1 bg-blue-500/10 text-blue-600 border border-blue-500/20">OPEN</span>
                         </div>
                         <p id="tiebreaker-game" class="text-sm text-slate-500 mt-1">Loading Monday night game...</p>
-                        <p class="text-xs text-slate-400 mt-2">Predict the combined Monday night score. Your prediction locks with the rest of the week at the Commissioner’s deadline.</p>
+                        <p id="tiebreaker-subtext" class="text-xs text-slate-400 mt-2">Predict the combined Monday night score. Your prediction locks with the rest of the week at the Commissioner’s deadline.</p>
                     </div>
                     <div class="flex items-end gap-3">
                         <div>
@@ -1334,7 +1334,7 @@ body.light-theme footer{border-color:#dbe5ef!important}
     <div id="admin-tiebreaker-panel" class="mt-5 bg-slate-900 border border-slate-800 rounded-2xl p-5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h4 class="font-black text-white">Monday Night Tiebreaker</h4>
+                <h4 id="admin-tiebreaker-title" class="font-black text-white">Monday Night Tiebreaker</h4>
                 <p id="admin-tiebreaker-game" class="text-sm text-slate-500 mt-1">Import the NFL schedule to detect the Monday night game.</p>
             </div>
             <div class="flex items-end gap-3">
@@ -5504,12 +5504,19 @@ async function deleteSelectedAdminWeek() {
         const status = document.getElementById('tiebreaker-lock-status');
         const gameLabel = document.getElementById('tiebreaker-game');
         const result = document.getElementById('tiebreaker-result');
+        const titleEl = document.getElementById('tiebreaker-title');
+        const subtextEl = document.getElementById('tiebreaker-subtext');
 
         // Automatically create the week_tiebreakers row from the anchor
         // game(s) if the Commissioner has already imported the schedule.
         const tb = await ensureTiebreakerForWeek(currentWeek.id, currentGames, currentWeek.season_type);
         const isPreseason = Number(currentWeek.season_type) === 1;
         const anchorLabel = isPreseason ? 'final game' : 'Monday night';
+
+        titleEl.innerText = isPreseason ? '🏁 Final Game Tiebreaker' : '🌕 Monday Night Tiebreaker';
+        subtextEl.innerText = isPreseason
+            ? 'Predict the combined score of the week’s final game. Your prediction locks with the rest of the week at the Commissioner’s deadline.'
+            : 'Predict the combined Monday night score. Your prediction locks with the rest of the week at the Commissioner’s deadline.';
 
         if(!tb){
             gameLabel.innerText =
@@ -5654,10 +5661,12 @@ async function deleteSelectedAdminWeek() {
     }
 
     async function loadAdminTiebreaker(){
-        const label=document.getElementById('admin-tiebreaker-game'),input=document.getElementById('admin-actual-total'),results=document.getElementById('admin-tiebreaker-results');
+        const label=document.getElementById('admin-tiebreaker-game'),input=document.getElementById('admin-actual-total'),results=document.getElementById('admin-tiebreaker-results'),titleEl=document.getElementById('admin-tiebreaker-title');
         if(!label||!isCommissioner()||!currentAdminWeek)return;
         const {data:tb}=await supabaseClient.from('week_tiebreakers').select('*').eq('week_id',currentAdminWeek.id).maybeSingle();
-        const anchorLabel=Number(currentAdminWeek.season_type)===1?'final':'Monday night';
+        const isPreseason=Number(currentAdminWeek.season_type)===1;
+        const anchorLabel=isPreseason?'final':'Monday night';
+        if(titleEl)titleEl.innerText=isPreseason?'Final Game Tiebreaker':'Monday Night Tiebreaker';
         if(!tb){label.innerText=`Import the NFL schedule to detect the ${anchorLabel} game.`;input.value='';results.innerHTML='';return;}
         const gameIds=tiebreakerGameIds(tb);
         const {data:games}=await supabaseClient.from('games').select('*').in('id',gameIds);
