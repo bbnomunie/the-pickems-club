@@ -336,8 +336,6 @@ body.light-theme footer{border-color:#dbe5ef!important}
             </div>
 
 
-            <div id="auth-form-container">
-
             <form
                 id="auth-form"
                 onsubmit="handleAuth(event)"
@@ -424,18 +422,6 @@ body.light-theme footer{border-color:#dbe5ef!important}
                 </div>
 
 
-                <div id="forgot-password-link-wrapper" class="text-right -mt-2">
-                    <button
-                        type="button"
-                        onclick="showForgotPasswordScreen()"
-                        id="forgot-password-link"
-                        class="text-xs text-emerald-400 hover:text-emerald-300 hover:underline"
-                    >
-                        Forgot password?
-                    </button>
-                </div>
-
-
                 <div
                     id="auth-error"
                     class="hidden rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
@@ -460,138 +446,6 @@ body.light-theme footer{border-color:#dbe5ef!important}
             >
                 Need an account? Sign up
             </button>
-
-            </div>
-
-
-            <!-- FORGOT PASSWORD -->
-
-            <div id="forgot-password-container" class="hidden">
-
-                <p class="text-sm text-slate-400 mb-5">
-                    Enter the email on your account and we'll send you a link to reset your password.
-                </p>
-
-                <form
-                    id="forgot-password-form"
-                    onsubmit="handleForgotPassword(event)"
-                    class="space-y-4"
-                >
-
-                    <div>
-
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                            Email
-                        </label>
-
-                        <input
-                            type="email"
-                            id="forgot-email"
-                            required
-                            autocomplete="email"
-                            placeholder="youremail@example.com"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                        >
-
-                    </div>
-
-
-                    <div
-                        id="forgot-password-error"
-                        class="hidden rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
-                    ></div>
-
-
-                    <button
-                        id="forgot-password-submit"
-                        type="submit"
-                        class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 font-bold text-white transition"
-                    >
-                        Send Reset Link
-                    </button>
-
-                </form>
-
-
-                <button
-                    onclick="showSignInScreen()"
-                    class="w-full mt-5 text-sm text-emerald-400 hover:text-emerald-300 hover:underline"
-                >
-                    Back to sign in
-                </button>
-
-            </div>
-
-
-            <!-- RESET PASSWORD (arrived via emailed link) -->
-
-            <div id="reset-password-container" class="hidden">
-
-                <p class="text-sm text-slate-400 mb-5">
-                    Choose a new password for your account.
-                </p>
-
-                <form
-                    id="reset-password-form"
-                    onsubmit="handleUpdatePassword(event)"
-                    class="space-y-4"
-                >
-
-                    <div>
-
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                            New Password
-                        </label>
-
-                        <input
-                            type="password"
-                            id="reset-new-password"
-                            required
-                            minlength="6"
-                            autocomplete="new-password"
-                            placeholder="••••••••"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                        >
-
-                    </div>
-
-
-                    <div>
-
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                            Confirm New Password
-                        </label>
-
-                        <input
-                            type="password"
-                            id="reset-confirm-password"
-                            required
-                            minlength="6"
-                            autocomplete="new-password"
-                            placeholder="••••••••"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                        >
-
-                    </div>
-
-
-                    <div
-                        id="reset-password-error"
-                        class="hidden rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
-                    ></div>
-
-
-                    <button
-                        id="reset-password-submit"
-                        type="submit"
-                        class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 font-bold text-white transition"
-                    >
-                        Update Password
-                    </button>
-
-                </form>
-
-            </div>
 
         </div>
 
@@ -1710,10 +1564,6 @@ const supabaseClient = supabase.createClient(
                     ? 'Already have an account? Sign in'
                     : 'Need an account? Sign up';
 
-        document
-            .getElementById('forgot-password-link-wrapper')
-            .classList.toggle('hidden', isSignUp);
-
         clearAuthError();
     }
 
@@ -1855,213 +1705,6 @@ const supabaseClient = supabase.createClient(
 
 
     // ============================================================
-    // FORGOT / RESET PASSWORD
-    // ============================================================
-
-    // Supabase redirects the "reset password" email link back to this
-    // same page with #access_token=...&type=recovery in the URL hash.
-    function isPasswordRecoveryLink() {
-        return (
-            window.location.hash.includes('type=recovery')
-            || window.location.search.includes('type=recovery')
-        );
-    }
-
-    function showForgotPasswordScreen() {
-
-        document.getElementById('auth-form-container').classList.add('hidden');
-        document.getElementById('reset-password-container').classList.add('hidden');
-        document.getElementById('forgot-password-container').classList.remove('hidden');
-
-        clearForgotPasswordError();
-
-        const emailField = document.getElementById('forgot-email');
-        const currentEmail = document.getElementById('email')?.value?.trim();
-        if (emailField && currentEmail) {
-            emailField.value = currentEmail;
-        }
-
-        syncFootballSpin();
-    }
-
-    function showSignInScreen() {
-
-        document.getElementById('forgot-password-container').classList.add('hidden');
-        document.getElementById('reset-password-container').classList.add('hidden');
-        document.getElementById('auth-form-container').classList.remove('hidden');
-
-        isSignUp = false;
-        setAuthMode(false);
-        syncFootballSpin();
-    }
-
-    function showResetPasswordScreen() {
-
-        document.getElementById('auth-form-container').classList.add('hidden');
-        document.getElementById('forgot-password-container').classList.add('hidden');
-        document.getElementById('reset-password-container').classList.remove('hidden');
-
-        const authScreen = document.getElementById('auth-screen');
-        const dashboard = document.getElementById('app-dashboard');
-        const userInfo = document.getElementById('user-info');
-        if (authScreen) authScreen.classList.remove('hidden');
-        if (dashboard) dashboard.classList.add('hidden');
-        if (userInfo) {
-            userInfo.classList.add('hidden');
-            userInfo.classList.remove('flex');
-        }
-
-        clearResetPasswordError();
-        syncFootballSpin();
-    }
-
-    async function handleForgotPassword(event) {
-
-        event.preventDefault();
-        clearForgotPasswordError();
-
-        const email =
-            document
-                .getElementById('forgot-email')
-                .value
-                .trim();
-
-        const submit =
-            document.getElementById('forgot-password-submit');
-
-        submit.disabled = true;
-        submit.innerText = 'Sending...';
-
-        try {
-
-            const { error } =
-                await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + window.location.pathname
-                });
-
-            if (error) {
-                throw error;
-            }
-
-            showToast(
-                'Check your email for a link to reset your password.',
-                'success'
-            );
-
-            showSignInScreen();
-
-        } catch (error) {
-
-            showForgotPasswordError(
-                error.message || 'Something went wrong.'
-            );
-
-        } finally {
-
-            submit.disabled = false;
-            submit.innerText = 'Send Reset Link';
-
-        }
-
-    }
-
-    async function handleUpdatePassword(event) {
-
-        event.preventDefault();
-        clearResetPasswordError();
-
-        const newPassword =
-            document
-                .getElementById('reset-new-password')
-                .value;
-
-        const confirmPassword =
-            document
-                .getElementById('reset-confirm-password')
-                .value;
-
-        if (newPassword.length < 6) {
-            showResetPasswordError('Password must be at least 6 characters.');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            showResetPasswordError('Passwords do not match.');
-            return;
-        }
-
-        const submit =
-            document.getElementById('reset-password-submit');
-
-        submit.disabled = true;
-        submit.innerText = 'Updating...';
-
-        try {
-
-            const { error } =
-                await supabaseClient.auth.updateUser({
-                    password: newPassword
-                });
-
-            if (error) {
-                throw error;
-            }
-
-            // Clean the recovery token out of the URL so a refresh doesn't
-            // re-trigger the reset screen.
-            history.replaceState(
-                null,
-                '',
-                window.location.pathname + window.location.search
-            );
-
-            showToast('Password updated! You are now signed in.', 'success');
-
-            const { data: { user } } = await supabaseClient.auth.getUser();
-
-            if (user) {
-                await handleLoggedInUser(user);
-            } else {
-                showAuthScreen();
-            }
-
-        } catch (error) {
-
-            showResetPasswordError(
-                error.message || 'Something went wrong.'
-            );
-
-        } finally {
-
-            submit.disabled = false;
-            submit.innerText = 'Update Password';
-
-        }
-
-    }
-
-    function showForgotPasswordError(message) {
-        const error = document.getElementById('forgot-password-error');
-        error.innerText = message;
-        error.classList.remove('hidden');
-    }
-
-    function clearForgotPasswordError() {
-        document.getElementById('forgot-password-error').classList.add('hidden');
-    }
-
-    function showResetPasswordError(message) {
-        const error = document.getElementById('reset-password-error');
-        error.innerText = message;
-        error.classList.remove('hidden');
-    }
-
-    function clearResetPasswordError() {
-        document.getElementById('reset-password-error').classList.add('hidden');
-    }
-
-
-    // ============================================================
     // AUTH / DASHBOARD UI
     // ============================================================
 
@@ -2121,10 +1764,6 @@ const supabaseClient = supabase.createClient(
             userInfo.classList.remove('flex');
         }
 
-        document.getElementById('auth-form-container')?.classList.remove('hidden');
-        document.getElementById('forgot-password-container')?.classList.add('hidden');
-        document.getElementById('reset-password-container')?.classList.add('hidden');
-
         isSignUp = false;
         setAuthMode(false);
 
@@ -2170,36 +1809,23 @@ const supabaseClient = supabase.createClient(
 
     async function initializeApp() {
 
-        // A "reset password" email link lands back here with
-        // #access_token=...&type=recovery in the URL. Show the "set a new
-        // password" screen instead of the normal dashboard/login flow,
-        // even though Supabase has already logged the browser in with a
-        // (recovery-only) session.
-        if (isPasswordRecoveryLink()) {
+        const {
+            data: {
+                session
+            }
+        } =
+            await supabaseClient.auth.getSession();
 
-            showResetPasswordScreen();
+
+        if (session) {
+
+            await handleLoggedInUser(
+                session.user
+            );
 
         } else {
 
-            const {
-                data: {
-                    session
-                }
-            } =
-                await supabaseClient.auth.getSession();
-
-
-            if (session) {
-
-                await handleLoggedInUser(
-                    session.user
-                );
-
-            } else {
-
-                showAuthScreen();
-
-            }
+            showAuthScreen();
 
         }
 
@@ -2213,16 +1839,10 @@ const supabaseClient = supabase.createClient(
         supabaseClient.auth.onAuthStateChange(
             (event, session) => {
 
-                if (event === 'PASSWORD_RECOVERY') {
-                    showResetPasswordScreen();
-                    return;
-                }
-
                 if (
                     event === 'SIGNED_IN' &&
                     session &&
-                    String(initializedUserId) !== String(session.user.id) &&
-                    !isPasswordRecoveryLink()
+                    String(initializedUserId) !== String(session.user.id)
                 ) {
                     // Defer follow-up Supabase work outside the auth callback.
                     setTimeout(() => {
