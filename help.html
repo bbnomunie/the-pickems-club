@@ -51,6 +51,26 @@
         section h2 {
             scroll-margin-top: 90px;
         }
+
+        .reveal-email-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 9999px;
+            border: 1px solid #a7f3d0;
+            background: #ecfdf5;
+            color: #047857;
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .reveal-email-btn:hover {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+        }
     </style>
 </head>
 <body class="text-slate-900 min-h-screen">
@@ -141,7 +161,14 @@
         <p class="text-sm text-slate-600">
             Having trouble with the site, or a question that's not covered
             below? Email
-            <a href="mailto:thepickemsclub@gmail.com" class="text-emerald-700 font-semibold hover:underline">thepickemsclub@gmail.com</a>
+            <span class="inline-flex items-center align-middle mx-1">
+                <button type="button" onclick="revealEmail(this)" class="reveal-email-btn">
+                    📧 Click to reveal email
+                </button>
+                <span class="email-hidden hidden">
+                    <a href="mailto:thepickemsclub@gmail.com" class="text-emerald-700 font-semibold hover:underline">thepickemsclub@gmail.com</a>
+                </span>
+            </span>
             — it reaches both the system Admin and the Commissioner.
         </p>
     </section>
@@ -293,7 +320,14 @@
                         If it's been a while and you still don't have the
                         email, reach out to the <strong>Commissioner</strong>
                         at
-                        <a href="mailto:thepickemsclub@gmail.com" class="text-emerald-700 font-semibold hover:underline">thepickemsclub@gmail.com</a>
+                        <span class="inline-flex items-center align-middle mx-1">
+                            <button type="button" onclick="revealEmail(this)" class="reveal-email-btn">
+                                📧 Click to reveal email
+                            </button>
+                            <span class="email-hidden hidden">
+                                <a href="mailto:thepickemsclub@gmail.com" class="text-emerald-700 font-semibold hover:underline">thepickemsclub@gmail.com</a>
+                            </span>
+                        </span>
                         — they can have the system Admin reset your
                         password for you manually.
                     </p>
@@ -392,6 +426,14 @@
 <footer class="border-t border-slate-200 py-6 text-center text-xs text-slate-500">
     &copy;THE PICKEMS CLUB • Built for Friends &amp; Coworkers • <a href="index.html" class="text-blue-600 hover:underline">← Back to Main Site</a>
 </footer>
+
+<script>
+    function revealEmail(btn) {
+        const wrapper = btn.parentElement;
+        wrapper.querySelector('.email-hidden').classList.remove('hidden');
+        btn.classList.add('hidden');
+    }
+</script>
 
 </body>
 </html>
