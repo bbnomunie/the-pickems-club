@@ -1,0 +1,589 @@
+<style>
+  :root{
+    --bg:#0b1220;
+    --panel:#131c2e;
+    --panel-2:#0f1729;
+    --border:#233047;
+    --green:#22c55e;
+    --green-dim:#16532f;
+    --green-text:#86efac;
+    --blue:#3b82f6;
+    --blue-dim:#173a6b;
+    --blue-text:#93c5fd;
+    --gold-dim:#4a3b12;
+    --gold-text:#fcd34d;
+    --slate:#64748b;
+    --slate-dim:#1e2a3f;
+    --red:#f87171;
+    --red-dim:#4a1f1f;
+    --text:#e2e8f0;
+    --text-dim:#94a3b8;
+    --text-faint:#5b6b85;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  .dt-root{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    border-radius:20px;
+    padding:20px 16px 28px;
+    max-width:520px;
+    margin:0 auto;
+    min-height:400px;
+  }
+  .dt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .dt-title{display:flex;align-items:center;gap:10px}
+  .dt-title .ball{font-size:26px;line-height:1}
+  .dt-title h1{font-size:17px;margin:0;font-weight:800;letter-spacing:.2px}
+  .dt-title p{margin:1px 0 0;font-size:11.5px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+  .dt-gear,.dt-signout{
+    width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
+    background:var(--panel);color:var(--text-dim);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:16px;flex-shrink:0;
+  }
+  .dt-gear:hover,.dt-signout:hover{color:var(--text);border-color:#345}
+  .dt-header-actions{display:flex;gap:8px}
+
+  .dt-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+  .dt-sum-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:11px 8px;text-align:center}
+  .dt-sum-card .num{font-size:18px;font-weight:800}
+  .dt-sum-card .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);margin-top:3px;font-weight:700}
+  .dt-sum-card.collected .num{color:var(--green-text)}
+  .dt-sum-card.owed .num{color:#fca5a5}
+
+  .dt-week-pill{
+    display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);
+    padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--text-dim);margin-bottom:14px;
+  }
+  .dt-week-pill b{color:var(--text)}
+
+  .dt-section-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);
+    font-weight:800;margin:18px 2px 8px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .dt-toggle-link{font-size:11px;color:var(--text-dim);cursor:pointer;text-decoration:underline;text-transform:none;letter-spacing:0;font-weight:700}
+
+  .dt-player{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .15s ease}
+  .dt-player.expanded{border-color:#2c3d5c}
+  .dt-player.inactive{opacity:.55}
+  .dt-player-row{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer}
+  .dt-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--text-dim);flex-shrink:0;border:1px solid var(--border)}
+  .dt-player-info{flex:1;min-width:0}
+  .dt-player-name{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dt-player-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;display:flex;align-items:center;gap:5px}
+  .dt-method-tag{font-size:10.5px;color:var(--text-faint)}
+  .dt-chip{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;white-space:nowrap;flex-shrink:0;cursor:pointer;user-select:none;border:1px solid transparent}
+  .dt-chip.paid{background:var(--green-dim);color:var(--green-text);border-color:#1f6b3a}
+  .dt-chip.skip{background:var(--slate-dim);color:var(--text-dim);border-color:#2c3d5c}
+  .dt-chip.unpaid{background:var(--red-dim);color:#fca5a5;border-color:#6b2b2b}
+  .dt-balance{font-size:13px;font-weight:800;min-width:52px;text-align:right;flex-shrink:0}
+  .dt-balance.pos{color:var(--green-text)}
+  .dt-balance.neg{color:#fca5a5}
+  .dt-caret{color:var(--text-faint);font-size:11px;transition:transform .15s ease;flex-shrink:0}
+  .dt-player.expanded .dt-caret{transform:rotate(90deg)}
+
+  .dt-weeks-grid{display:none;padding:2px 14px 14px;border-top:1px solid var(--border)}
+  .dt-player.expanded .dt-weeks-grid{display:block}
+  .dt-weeks-flex{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .dt-week-chip{
+    width:42px;height:42px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:9.5px;font-weight:800;cursor:pointer;border:1px solid var(--border);background:var(--panel-2);
+    color:var(--text-faint);line-height:1.1;
+  }
+  .dt-week-chip .wk-num{font-size:9px;opacity:.8}
+  .dt-week-chip .wk-mark{font-size:12px;margin-top:1px}
+  .dt-week-chip.paid{background:var(--green-dim);color:var(--green-text);border-color:#1f6b3a}
+  .dt-week-chip.skip{background:var(--slate-dim);color:var(--text-dim);border-color:#2c3d5c}
+  .dt-week-chip.future{opacity:.45}
+
+  .dt-note{font-size:11px;color:var(--text-faint);margin-top:16px;line-height:1.6;padding:0 2px}
+  .dt-note b{color:var(--text-dim)}
+  .dt-empty{text-align:center;padding:40px 20px;color:var(--text-faint)}
+  .dt-empty .big{font-size:34px;margin-bottom:8px}
+  .dt-empty p{font-size:13px;margin:0 0 4px}
+
+  .dt-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .dt-overlay.open{display:flex}
+  .dt-sheet{background:var(--panel);border-radius:18px 18px 0 0;padding:20px 18px 26px;width:100%;max-width:520px;border:1px solid var(--border);border-bottom:none;max-height:85vh;overflow-y:auto}
+  .dt-sheet h2{font-size:15px;margin:0 0 4px;font-weight:800}
+  .dt-sheet .sub{font-size:12px;color:var(--text-faint);margin-bottom:16px}
+  .dt-field{margin-bottom:14px}
+  .dt-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-faint);margin-bottom:6px}
+  .dt-field input{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-weight:600}
+  .dt-field input:focus{outline:none;border-color:var(--green)}
+  .dt-radio-row{display:flex;gap:8px}
+  .dt-radio-opt{
+    flex:1;text-align:center;padding:11px 6px;border-radius:10px;border:1.5px solid var(--border);
+    background:var(--panel-2);color:var(--text-dim);font-weight:700;font-size:12.5px;cursor:pointer;
+  }
+  .dt-radio-opt.active{border-color:var(--green);color:var(--green-text);background:var(--green-dim)}
+  .dt-radio-opt.active.method-venmo{border-color:var(--blue);color:var(--blue-text);background:var(--blue-dim)}
+  .dt-radio-opt.active.method-cash{border-color:#d4a72c;color:var(--gold-text);background:var(--gold-dim)}
+  .dt-radio-opt.active.status-skip{border-color:var(--slate);color:var(--text-dim);background:var(--slate-dim)}
+  .dt-radio-opt.active.status-unpaid{border-color:var(--red);color:#fca5a5;background:var(--red-dim)}
+  .dt-sheet-actions{display:flex;gap:10px;margin-top:18px}
+  .dt-btn{flex:1;padding:12px;border-radius:10px;font-weight:800;font-size:13.5px;border:none;cursor:pointer}
+  .dt-btn.primary{background:var(--green);color:#04140a}
+  .dt-btn.ghost{background:var(--panel-2);color:var(--text-dim);border:1px solid var(--border)}
+  .dt-btn[disabled]{opacity:.5;cursor:not-allowed}
+
+  .dt-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(10px);background:#0f1729;border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:700;opacity:0;transition:all .2s ease;z-index:60;pointer-events:none;max-width:88%;text-align:center}
+  .dt-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .dt-toast.err{border-color:#6b2b2b;color:#fca5a5}
+
+  .dt-loading{padding:60px 20px;text-align:center;color:var(--text-faint);font-size:13px}
+  .dt-login{padding:20px 4px}
+  .dt-login .ball{font-size:36px;text-align:center;display:block;margin-bottom:6px}
+  .dt-login h1{text-align:center;font-size:17px;margin:0 0 2px;font-weight:800}
+  .dt-login p.sub{text-align:center;font-size:12.5px;color:var(--text-faint);margin:0 0 22px}
+  .dt-login-err{background:var(--red-dim);color:#fca5a5;border:1px solid #6b2b2b;padding:9px 12px;border-radius:10px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+</style>
+
+<div class="dt-root" id="dtRoot">
+  <div class="dt-loading" id="dtLoading">Connecting to Supabase…</div>
+</div>
+
+<div class="dt-overlay" id="dtOverlay">
+  <div class="dt-sheet" id="dtSheet"></div>
+</div>
+
+<div class="dt-toast" id="dtToast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  // ---- Same project as the main Pickems Club site ----
+  const SUPABASE_URL = 'https://zzejiwrhvrhstnqngygl.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_fLtvEXmHwDvdHEmrO6NKug_0ceZMtjK';
+  const COMMISSIONER_USER_ID = '6b677b18-0ae5-4cf4-abda-cc68f3b76aed';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: true }
+  });
+
+  const root = document.getElementById('dtRoot');
+  const overlay = document.getElementById('dtOverlay');
+  const sheet = document.getElementById('dtSheet');
+  const toastEl = document.getElementById('dtToast');
+
+  let settings = null;      // { season, fee, current_week, total_weeks }
+  let players = [];         // [{ id, display_name, is_active }]
+  let paymentsByPlayer = {}; // { user_id: { weekNum: rowObj } }
+  let expandedId = null;
+  let showInactive = false;
+
+  function toast(msg, isErr){
+    toastEl.textContent = msg;
+    toastEl.className = 'dt-toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(()=> toastEl.className = 'dt-toast', 2400);
+  }
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+  function initials(name){
+    return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase() || '?';
+  }
+  function fmtMoney(n){
+    const abs = Math.abs(Math.round(n));
+    const s = '$' + abs.toLocaleString();
+    return n < 0 ? '(' + s + ')' : s;
+  }
+  function methodLabel(m){
+    return m === 'cashapp' ? 'Cash App' : m === 'venmo' ? 'Venmo' : m === 'cash' ? 'Cash' : '';
+  }
+
+  // ============================================================
+  // LOGIN
+  // ============================================================
+  function renderLogin(errMsg){
+    root.innerHTML = `
+      <div class="dt-login">
+        <span class="ball">🏈</span>
+        <h1>Commissioner Login</h1>
+        <p class="sub">Sign in with your Pickems Club account</p>
+        ${errMsg ? `<div class="dt-login-err">${escapeHtml(errMsg)}</div>` : ''}
+        <div class="dt-field"><label>Email</label><input type="email" id="loginEmail" autocomplete="username"></div>
+        <div class="dt-field"><label>Password</label><input type="password" id="loginPass" autocomplete="current-password"></div>
+        <button class="dt-btn primary" id="loginBtn" style="width:100%">Sign In</button>
+      </div>
+    `;
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
+    document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  }
+
+  async function doLogin(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPass').value;
+    if(!email || !password){ renderLogin('Enter your email and password.'); return; }
+    root.innerHTML = `<div class="dt-loading">Signing in…</div>`;
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){ renderLogin(error.message); return; }
+    if(!data.user || data.user.id !== COMMISSIONER_USER_ID){
+      await sb.auth.signOut();
+      renderLogin('This tool is for the pool commissioner only.');
+      return;
+    }
+    await loadAll();
+  }
+
+  // ============================================================
+  // DATA LOADING
+  // ============================================================
+  async function loadAll(){
+    root.innerHTML = `<div class="dt-loading">Loading dues data…</div>`;
+    try {
+      const { data: settingsRow, error: sErr } = await sb
+        .from('dues_settings').select('*').eq('id', 1).maybeSingle();
+      if(sErr) throw sErr;
+      settings = settingsRow || { season: new Date().getFullYear(), fee: 20, current_week: 1, total_weeks: 18 };
+
+      const { data: profileRows, error: pErr } = await sb
+        .from('profiles').select('id, display_name, is_active').order('display_name', { ascending: true });
+      if(pErr) throw pErr;
+      players = profileRows || [];
+
+      const { data: payRows, error: payErr } = await sb
+        .from('dues_payments').select('*').eq('season', settings.season);
+      if(payErr) throw payErr;
+
+      paymentsByPlayer = {};
+      (payRows || []).forEach(row=>{
+        if(!paymentsByPlayer[row.user_id]) paymentsByPlayer[row.user_id] = {};
+        paymentsByPlayer[row.user_id][row.week_number] = row;
+      });
+
+      render();
+    } catch(e){
+      root.innerHTML = `<div class="dt-loading">Couldn't load dues data.<br>${escapeHtml(e.message||String(e))}<br><br>
+        <button class="dt-btn ghost" id="retryBtn" style="margin-top:10px">Try Again</button></div>`;
+      const rb = document.getElementById('retryBtn');
+      if(rb) rb.addEventListener('click', loadAll);
+    }
+  }
+
+  // ============================================================
+  // COMPUTATION HELPERS
+  // ============================================================
+  function weekRow(userId, wk){
+    return (paymentsByPlayer[userId] || {})[wk] || null;
+  }
+  function weeksPaidCount(userId){
+    const rows = paymentsByPlayer[userId] || {};
+    return Object.values(rows).filter(r=>r.status==='paid').length;
+  }
+  function amountPaid(userId){
+    const rows = paymentsByPlayer[userId] || {};
+    return Object.values(rows).filter(r=>r.status==='paid').reduce((s,r)=> s + Number(r.amount ?? settings.fee), 0);
+  }
+  function weeksPlayedThrough(userId, upTo){
+    const rows = paymentsByPlayer[userId] || {};
+    let n = 0;
+    for(let w=1; w<=upTo; w++){ if(!(rows[w] && rows[w].status==='skipped')) n++; }
+    return n;
+  }
+  function amountOwed(userId){
+    return weeksPlayedThrough(userId, settings.current_week) * settings.fee;
+  }
+  function balance(userId){
+    return amountPaid(userId) - amountOwed(userId);
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render(){
+    const visiblePlayers = players.filter(p => showInactive || p.is_active !== false);
+
+    const totalCollected = players.reduce((s,p)=> s + amountPaid(p.id), 0);
+    const totalOwed = players.reduce((s,p)=> s + amountOwed(p.id), 0);
+    const behindCount = players.filter(p=> balance(p.id) < 0).length;
+
+    let html = `
+      <div class="dt-header">
+        <div class="dt-title">
+          <span class="ball">🏈</span>
+          <div><h1>Pickems Dues</h1><p>${settings.season} Season</p></div>
+        </div>
+        <div class="dt-header-actions">
+          <button class="dt-gear" id="dtGearBtn" title="Settings">⚙</button>
+          <button class="dt-signout" id="dtSignOutBtn" title="Sign out">⎋</button>
+        </div>
+      </div>
+
+      <div class="dt-week-pill">Week <b>${settings.current_week}</b> of ${settings.total_weeks} &nbsp;•&nbsp; <b>$${settings.fee}</b>/wk</div>
+
+      <div class="dt-summary">
+        <div class="dt-sum-card collected"><div class="num">${fmtMoney(totalCollected)}</div><div class="lbl">Collected</div></div>
+        <div class="dt-sum-card owed"><div class="num">${fmtMoney(totalOwed)}</div><div class="lbl">Total Owed</div></div>
+        <div class="dt-sum-card"><div class="num">${behindCount}</div><div class="lbl">Behind</div></div>
+      </div>
+
+      <div class="dt-section-label">
+        <span>Players (${visiblePlayers.length})</span>
+        <span class="dt-toggle-link" id="dtToggleInactive">${showInactive ? 'Hide inactive' : 'Show inactive'}</span>
+      </div>
+    `;
+
+    if(!visiblePlayers.length){
+      html += `<div class="dt-empty"><div class="big">🏈</div><p>No players found.</p><p>Add players from the Commissioner Center's Player Accounts card.</p></div>`;
+    } else {
+      visiblePlayers.forEach(p=>{
+        const bal = balance(p.id);
+        const curRow = weekRow(p.id, settings.current_week);
+        const chipClass = curRow?.status === 'paid' ? 'paid' : curRow?.status === 'skipped' ? 'skip' : 'unpaid';
+        const chipLabel = curRow?.status === 'paid' ? 'Paid' : curRow?.status === 'skipped' ? 'Skipped' : 'Unpaid';
+        const isOpen = expandedId === p.id;
+        const subMethod = curRow?.status === 'paid'
+          ? `<span class="dt-method-tag">${methodLabel(curRow.payment_method)}${curRow.payment_tag ? ' · ' + escapeHtml(curRow.payment_tag) : ''}</span>`
+          : '';
+
+        html += `
+          <div class="dt-player ${isOpen?'expanded':''} ${p.is_active===false?'inactive':''}" data-id="${p.id}">
+            <div class="dt-player-row" data-toggle="${p.id}">
+              <div class="dt-avatar">${initials(p.display_name)}</div>
+              <div class="dt-player-info">
+                <div class="dt-player-name">${escapeHtml(p.display_name || 'Unnamed')}</div>
+                <div class="dt-player-sub">${weeksPaidCount(p.id)} of ${settings.current_week} weeks paid ${subMethod}</div>
+              </div>
+              <div class="dt-chip ${chipClass}" data-quickweek="${p.id}">${chipLabel}</div>
+              <div class="dt-balance ${bal<0?'neg':'pos'}">${fmtMoney(bal)}</div>
+              <div class="dt-caret">▶</div>
+            </div>
+            <div class="dt-weeks-grid">
+              <div class="dt-section-label" style="margin-top:0">Tap a week to set status</div>
+              <div class="dt-weeks-flex">
+                ${Array.from({length: settings.total_weeks}, (_,i)=>i+1).map(wk=>{
+                  const row = weekRow(p.id, wk);
+                  const cls = row?.status === 'paid' ? 'paid' : row?.status === 'skipped' ? 'skip' : '';
+                  const mark = row?.status === 'paid' ? '✓' : row?.status === 'skipped' ? '–' : '';
+                  return `<div class="dt-week-chip ${cls}" data-week="${p.id}:${wk}">
+                            <span class="wk-num">Wk${wk}</span><span class="wk-mark">${mark}</span>
+                          </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    html += `<div class="dt-note"><b>Paid</b> = green (method + tag saved) · <b>Skipped</b> = gray, didn't play, not charged · <b>Unpaid</b> = played, still owes. Roster comes from your Pickems Club player accounts — manage who's on it from the Commissioner Center.</div>`;
+
+    root.innerHTML = html;
+    bindEvents();
+  }
+
+  function bindEvents(){
+    document.getElementById('dtGearBtn').addEventListener('click', openSettings);
+    document.getElementById('dtSignOutBtn').addEventListener('click', async ()=>{
+      await sb.auth.signOut();
+      renderLogin();
+    });
+    document.getElementById('dtToggleInactive').addEventListener('click', ()=>{
+      showInactive = !showInactive;
+      render();
+    });
+
+    root.querySelectorAll('[data-toggle]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        if(e.target.closest('[data-quickweek]')) return;
+        const id = el.getAttribute('data-toggle');
+        expandedId = expandedId === id ? null : id;
+        render();
+      });
+    });
+
+    root.querySelectorAll('[data-quickweek]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = el.getAttribute('data-quickweek');
+        openWeekSheet(id, settings.current_week);
+      });
+    });
+
+    root.querySelectorAll('[data-week]').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const [id, wkStr] = el.getAttribute('data-week').split(':');
+        openWeekSheet(id, Number(wkStr));
+      });
+    });
+  }
+
+  // ============================================================
+  // WEEK STATUS SHEET (status + payment method + tag)
+  // ============================================================
+  function openWeekSheet(userId, wk){
+    const player = players.find(p=>p.id===userId);
+    const existing = weekRow(userId, wk);
+    let status = existing?.status || 'unpaid';   // 'unpaid' | 'paid' | 'skipped'
+    let method = existing?.payment_method || 'cashapp';
+    let tag = existing?.payment_tag || '';
+
+    function draw(){
+      sheet.innerHTML = `
+        <h2>Week ${wk} — ${escapeHtml(player.display_name)}</h2>
+        <div class="sub">$${settings.fee} due this week</div>
+
+        <div class="dt-field">
+          <label>Status</label>
+          <div class="dt-radio-row">
+            <div class="dt-radio-opt status-unpaid ${status==='unpaid'?'active':''}" data-status="unpaid">Unpaid</div>
+            <div class="dt-radio-opt status-skip ${status==='skipped'?'active':''}" data-status="skipped">Skipped</div>
+            <div class="dt-radio-opt ${status==='paid'?'active':''}" data-status="paid">Paid</div>
+          </div>
+        </div>
+
+        ${status === 'paid' ? `
+          <div class="dt-field">
+            <label>Payment Method</label>
+            <div class="dt-radio-row">
+              <div class="dt-radio-opt ${method==='cashapp'?'active':''}" data-method="cashapp">Cash App</div>
+              <div class="dt-radio-opt method-venmo ${method==='venmo'?'active':''}" data-method="venmo">Venmo</div>
+              <div class="dt-radio-opt method-cash ${method==='cash'?'active':''}" data-method="cash">Cash</div>
+            </div>
+          </div>
+          ${method !== 'cash' ? `
+            <div class="dt-field">
+              <label>${method === 'cashapp' ? '$Cashtag' : 'Venmo Username'}</label>
+              <input type="text" id="fTag" placeholder="${method==='cashapp' ? '$example' : '@example'}" value="${escapeHtml(tag)}">
+            </div>
+          ` : ''}
+        ` : ''}
+
+        <div class="dt-sheet-actions">
+          <button class="dt-btn ghost" id="fCancel">Cancel</button>
+          <button class="dt-btn primary" id="fSave">Save</button>
+        </div>
+      `;
+      overlay.classList.add('open');
+      overlay.onclick = (e)=>{ if(e.target === overlay) closeSheet(); };
+
+      sheet.querySelectorAll('[data-status]').forEach(el=>{
+        el.addEventListener('click', ()=>{ status = el.getAttribute('data-status'); draw(); });
+      });
+      sheet.querySelectorAll('[data-method]').forEach(el=>{
+        el.addEventListener('click', ()=>{ method = el.getAttribute('data-method'); draw(); });
+      });
+      const tagInput = document.getElementById('fTag');
+      if(tagInput) tagInput.addEventListener('input', e=>{ tag = e.target.value; });
+
+      document.getElementById('fCancel').addEventListener('click', closeSheet);
+      document.getElementById('fSave').addEventListener('click', ()=> saveWeek(userId, wk, status, method, tag));
+    }
+    draw();
+  }
+
+  function closeSheet(){ overlay.classList.remove('open'); }
+
+  async function saveWeek(userId, wk, status, method, tag){
+    const saveBtn = document.getElementById('fSave');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    try {
+      if(status === 'unpaid'){
+        const { error } = await sb.from('dues_payments').delete()
+          .eq('user_id', userId).eq('season', settings.season).eq('week_number', wk);
+        if(error) throw error;
+        if(paymentsByPlayer[userId]) delete paymentsByPlayer[userId][wk];
+      } else if(status === 'skipped'){
+        const payload = {
+          user_id: userId, season: settings.season, week_number: wk,
+          status: 'skipped', payment_method: null, payment_tag: null, amount: null,
+          recorded_at: new Date().toISOString()
+        };
+        const { data, error } = await sb.from('dues_payments')
+          .upsert(payload, { onConflict: 'user_id,season,week_number' }).select().single();
+        if(error) throw error;
+        if(!paymentsByPlayer[userId]) paymentsByPlayer[userId] = {};
+        paymentsByPlayer[userId][wk] = data;
+      } else { // paid
+        if(method !== 'cash' && !tag.trim()){
+          toast('Enter their ' + (method==='cashapp' ? '$cashtag' : 'Venmo username'), true);
+          saveBtn.disabled = false; saveBtn.textContent = 'Save';
+          return;
+        }
+        const payload = {
+          user_id: userId, season: settings.season, week_number: wk,
+          status: 'paid', payment_method: method,
+          payment_tag: method === 'cash' ? null : tag.trim(),
+          amount: settings.fee,
+          recorded_at: new Date().toISOString()
+        };
+        const { data, error } = await sb.from('dues_payments')
+          .upsert(payload, { onConflict: 'user_id,season,week_number' }).select().single();
+        if(error) throw error;
+        if(!paymentsByPlayer[userId]) paymentsByPlayer[userId] = {};
+        paymentsByPlayer[userId][wk] = data;
+      }
+      closeSheet();
+      render();
+      toast('Week ' + wk + ' updated');
+    } catch(e){
+      toast("Couldn't save: " + (e.message || e), true);
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    }
+  }
+
+  // ============================================================
+  // SETTINGS SHEET
+  // ============================================================
+  function openSettings(){
+    sheet.innerHTML = `
+      <h2>Season Settings</h2>
+      <div class="dt-field"><label>Season Year</label><input type="number" id="fSeason" value="${settings.season}"></div>
+      <div class="dt-field"><label>Entry Fee per Week ($)</label><input type="number" id="fFee" value="${settings.fee}"></div>
+      <div class="dt-field"><label>Total Weeks This Season</label><input type="number" id="fTotal" value="${settings.total_weeks}"></div>
+      <div class="dt-field"><label>Current Week (dues owed through)</label><input type="number" id="fCurrent" value="${settings.current_week}"></div>
+      <div class="dt-sheet-actions">
+        <button class="dt-btn ghost" id="fCancel">Cancel</button>
+        <button class="dt-btn primary" id="fSave">Save</button>
+      </div>
+    `;
+    overlay.classList.add('open');
+    overlay.onclick = (e)=>{ if(e.target === overlay) closeSheet(); };
+    document.getElementById('fCancel').onclick = closeSheet;
+    document.getElementById('fSave').onclick = async ()=>{
+      const season = Number(document.getElementById('fSeason').value) || settings.season;
+      const fee = Number(document.getElementById('fFee').value);
+      const total_weeks = Math.max(1, Number(document.getElementById('fTotal').value) || settings.total_weeks);
+      const current_week = Math.max(1, Math.min(total_weeks, Number(document.getElementById('fCurrent').value) || settings.current_week));
+      if(!Number.isFinite(fee) || fee < 0){ toast('Enter a valid fee', true); return; }
+
+      const btn = document.getElementById('fSave');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const seasonChanged = season !== settings.season;
+        const { data, error } = await sb.from('dues_settings')
+          .upsert({ id: 1, season, fee, total_weeks, current_week, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+          .select().single();
+        if(error) throw error;
+        settings = data;
+        closeSheet();
+        if(seasonChanged) await loadAll(); else render();
+        toast('Settings saved');
+      } catch(e){
+        toast("Couldn't save: " + (e.message || e), true);
+        btn.disabled = false; btn.textContent = 'Save';
+      }
+    };
+  }
+
+  // ============================================================
+  // BOOT
+  // ============================================================
+  (async function boot(){
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user?.id === COMMISSIONER_USER_ID){
+      await loadAll();
+    } else {
+      renderLogin();
+    }
+  })();
+})();
+</script>
