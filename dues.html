@@ -167,9 +167,13 @@
   const sheet = document.getElementById('dtSheet');
   const toastEl = document.getElementById('dtToast');
 
-  let settings = null;      // { season, fee, current_week, total_weeks }
-  let players = [];         // [{ id, display_name, is_active }]
-  let paymentsByPlayer = {}; // { user_id: { weekNum: rowObj } }
+  let settings = null;       // { season, fee }
+  let players = [];          // [{ id, display_name, is_active }]
+  let paymentsByPlayer = {}; // { user_id: { weekIndex: rowObj } }
+  let weekMeta = [];         // [{ index, label, locked }] derived from the real schedule
+  let availableSeasons = []; // season_years found in the "weeks" table
+  let currentWeekIndex = 0;  // how many weeks are owed for (0 = season hasn't started)
+  let totalWeeksCount = 0;
   let expandedId = null;
   let showInactive = false;
 
@@ -239,10 +243,40 @@
       const { data: settingsRow, error: sErr } = await sb
         .from('dues_settings').select('*').eq('id', 1).maybeSingle();
       if(sErr) throw sErr;
-      settings = settingsRow || { season: new Date().getFullYear(), fee: 20, current_week: 1, total_weeks: 18 };
+      settings = settingsRow || { season: new Date().getFullYear(), fee: 5 };
 
+      // Which seasons actually exist in the real schedule?
+      const { data: seasonRows, error: seasonErr } = await sb
+        .from('weeks').select('season_year').order('season_year', { ascending: false });
+      if(seasonErr) throw seasonErr;
+      availableSeasons = [...new Set((seasonRows||[]).map(r=>r.season_year))];
+      if(!availableSeasons.includes(settings.season)){
+        settings.season = availableSeasons[0] ?? settings.season;
+      }
+
+      // Pull the real weeks for that season, in the order they actually happen
+      // (chronological by picks_lock_at) rather than by season_type's own numbering.
+      const { data: weekRows, error: wErr } = await sb
+        .from('weeks').select('id, name, week_number, season_type, picks_lock_at')
+        .eq('season_year', settings.season)
+        .order('picks_lock_at', { ascending: true, nullsFirst: false });
+      if(wErr) throw wErr;
+
+      const now = Date.now();
+      weekMeta = (weekRows||[]).map((w, i)=> ({
+        index: i + 1,
+        label: w.name || `Week ${w.week_number}`,
+        locked: w.picks_lock_at ? new Date(w.picks_lock_at).getTime() <= now : false
+      }));
+      totalWeeksCount = weekMeta.length;
+      const lockedCount = weekMeta.filter(w=>w.locked).length;
+      currentWeekIndex = totalWeeksCount === 0 ? 0 : Math.max(1, lockedCount);
+
+      // Players = everyone with an account, minus the commissioner (never plays)
       const { data: profileRows, error: pErr } = await sb
-        .from('profiles').select('id, display_name, is_active').order('display_name', { ascending: true });
+        .from('profiles').select('id, display_name, is_active')
+        .neq('id', COMMISSIONER_USER_ID)
+        .order('display_name', { ascending: true });
       if(pErr) throw pErr;
       players = profileRows || [];
 
@@ -286,7 +320,7 @@
     return n;
   }
   function amountOwed(userId){
-    return weeksPlayedThrough(userId, settings.current_week) * settings.fee;
+    return weeksPlayedThrough(userId, currentWeekIndex) * settings.fee;
   }
   function balance(userId){
     return amountPaid(userId) - amountOwed(userId);
@@ -314,7 +348,10 @@
         </div>
       </div>
 
-      <div class="dt-week-pill">Week <b>${settings.current_week}</b> of ${settings.total_weeks} &nbsp;•&nbsp; <b>$${settings.fee}</b>/wk</div>
+      <div class="dt-week-pill">${totalWeeksCount === 0
+          ? 'No weeks scheduled yet'
+          : `Week <b>${currentWeekIndex || 1}</b> of ${totalWeeksCount}${weekMeta[currentWeekIndex-1] ? ' — ' + escapeHtml(weekMeta[currentWeekIndex-1].label) : ''}`
+        } &nbsp;•&nbsp; <b>$${settings.fee}</b>/wk</div>
 
       <div class="dt-summary">
         <div class="dt-sum-card collected"><div class="num">${fmtMoney(totalCollected)}</div><div class="lbl">Collected</div></div>
@@ -328,12 +365,14 @@
       </div>
     `;
 
-    if(!visiblePlayers.length){
+    if(totalWeeksCount === 0){
+      html += `<div class="dt-empty"><div class="big">🏈</div><p>No weeks scheduled yet for ${settings.season}.</p><p>Create weeks in the Commissioner Center and they'll show up here automatically.</p></div>`;
+    } else if(!visiblePlayers.length){
       html += `<div class="dt-empty"><div class="big">🏈</div><p>No players found.</p><p>Add players from the Commissioner Center's Player Accounts card.</p></div>`;
     } else {
       visiblePlayers.forEach(p=>{
         const bal = balance(p.id);
-        const curRow = weekRow(p.id, settings.current_week);
+        const curRow = weekRow(p.id, currentWeekIndex);
         const chipClass = curRow?.status === 'paid' ? 'paid' : curRow?.status === 'skipped' ? 'skip' : 'unpaid';
         const chipLabel = curRow?.status === 'paid' ? 'Paid' : curRow?.status === 'skipped' ? 'Skipped' : 'Unpaid';
         const isOpen = expandedId === p.id;
@@ -347,7 +386,7 @@
               <div class="dt-avatar">${initials(p.display_name)}</div>
               <div class="dt-player-info">
                 <div class="dt-player-name">${escapeHtml(p.display_name || 'Unnamed')}</div>
-                <div class="dt-player-sub">${weeksPaidCount(p.id)} of ${settings.current_week} weeks paid ${subMethod}</div>
+                <div class="dt-player-sub">${weeksPaidCount(p.id)} of ${currentWeekIndex} weeks paid ${subMethod}</div>
               </div>
               <div class="dt-chip ${chipClass}" data-quickweek="${p.id}">${chipLabel}</div>
               <div class="dt-balance ${bal<0?'neg':'pos'}">${fmtMoney(bal)}</div>
@@ -356,12 +395,12 @@
             <div class="dt-weeks-grid">
               <div class="dt-section-label" style="margin-top:0">Tap a week to set status</div>
               <div class="dt-weeks-flex">
-                ${Array.from({length: settings.total_weeks}, (_,i)=>i+1).map(wk=>{
-                  const row = weekRow(p.id, wk);
+                ${weekMeta.map(wm=>{
+                  const row = weekRow(p.id, wm.index);
                   const cls = row?.status === 'paid' ? 'paid' : row?.status === 'skipped' ? 'skip' : '';
                   const mark = row?.status === 'paid' ? '✓' : row?.status === 'skipped' ? '–' : '';
-                  return `<div class="dt-week-chip ${cls}" data-week="${p.id}:${wk}">
-                            <span class="wk-num">Wk${wk}</span><span class="wk-mark">${mark}</span>
+                  return `<div class="dt-week-chip ${cls}" data-week="${p.id}:${wm.index}" title="${escapeHtml(wm.label)}">
+                            <span class="wk-num">Wk${wm.index}</span><span class="wk-mark">${mark}</span>
                           </div>`;
                 }).join('')}
               </div>
@@ -401,7 +440,7 @@
       el.addEventListener('click', (e)=>{
         e.stopPropagation();
         const id = el.getAttribute('data-quickweek');
-        openWeekSheet(id, settings.current_week);
+        openWeekSheet(id, currentWeekIndex);
       });
     });
 
@@ -425,8 +464,9 @@
     let tag = existing?.payment_tag || '';
 
     function draw(){
+      const label = weekMeta[wk-1] ? weekMeta[wk-1].label : `Week ${wk}`;
       sheet.innerHTML = `
-        <h2>Week ${wk} — ${escapeHtml(player.display_name)}</h2>
+        <h2>${escapeHtml(label)} — ${escapeHtml(player.display_name)}</h2>
         <div class="sub">$${settings.fee} due this week</div>
 
         <div class="dt-field">
@@ -534,12 +574,22 @@
   // SETTINGS SHEET
   // ============================================================
   function openSettings(){
+    const seasonOptions = availableSeasons.length
+      ? availableSeasons.map(y=> `<div class="dt-radio-opt ${y===settings.season?'active':''}" data-season="${y}">${y}</div>`).join('')
+      : `<div class="dt-field" style="color:var(--text-faint);font-size:12.5px">No seasons found yet — create a week in the Commissioner Center first.</div>`;
+
     sheet.innerHTML = `
       <h2>Season Settings</h2>
-      <div class="dt-field"><label>Season Year</label><input type="number" id="fSeason" value="${settings.season}"></div>
+      <div class="dt-field">
+        <label>Season</label>
+        <div class="dt-radio-row">${seasonOptions}</div>
+      </div>
       <div class="dt-field"><label>Entry Fee per Week ($)</label><input type="number" id="fFee" value="${settings.fee}"></div>
-      <div class="dt-field"><label>Total Weeks This Season</label><input type="number" id="fTotal" value="${settings.total_weeks}"></div>
-      <div class="dt-field"><label>Current Week (dues owed through)</label><input type="number" id="fCurrent" value="${settings.current_week}"></div>
+      <div class="dt-field" style="color:var(--text-faint);font-size:12px;line-height:1.5">
+        Week count and "current week" are pulled automatically from your real schedule (Commissioner Center → Week Settings) —
+        ${totalWeeksCount} week${totalWeeksCount===1?'':'s'} found for ${settings.season}, ${currentWeekIndex} locked so far.
+        Nothing to update here manually.
+      </div>
       <div class="dt-sheet-actions">
         <button class="dt-btn ghost" id="fCancel">Cancel</button>
         <button class="dt-btn primary" id="fSave">Save</button>
@@ -547,20 +597,27 @@
     `;
     overlay.classList.add('open');
     overlay.onclick = (e)=>{ if(e.target === overlay) closeSheet(); };
+
+    let pendingSeason = settings.season;
+    sheet.querySelectorAll('[data-season]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        pendingSeason = Number(el.getAttribute('data-season'));
+        sheet.querySelectorAll('[data-season]').forEach(o=>o.classList.remove('active'));
+        el.classList.add('active');
+      });
+    });
+
     document.getElementById('fCancel').onclick = closeSheet;
     document.getElementById('fSave').onclick = async ()=>{
-      const season = Number(document.getElementById('fSeason').value) || settings.season;
       const fee = Number(document.getElementById('fFee').value);
-      const total_weeks = Math.max(1, Number(document.getElementById('fTotal').value) || settings.total_weeks);
-      const current_week = Math.max(1, Math.min(total_weeks, Number(document.getElementById('fCurrent').value) || settings.current_week));
       if(!Number.isFinite(fee) || fee < 0){ toast('Enter a valid fee', true); return; }
 
       const btn = document.getElementById('fSave');
       btn.disabled = true; btn.textContent = 'Saving…';
       try {
-        const seasonChanged = season !== settings.season;
+        const seasonChanged = pendingSeason !== settings.season;
         const { data, error } = await sb.from('dues_settings')
-          .upsert({ id: 1, season, fee, total_weeks, current_week, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+          .upsert({ id: 1, season: pendingSeason, fee, updated_at: new Date().toISOString() }, { onConflict: 'id' })
           .select().single();
         if(error) throw error;
         settings = data;
