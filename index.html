@@ -1090,6 +1090,7 @@ body.light-theme footer{border-color:#dbe5ef!important}
                         </div>
                         <div id="gif-picker-status" class="mt-3 text-sm text-slate-400">Loading trending GIFs…</div>
                         <div id="gif-results" class="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-72 overflow-y-auto"></div>
+                        <button type="button" id="gif-load-more" onclick="loadMoreGifs()" class="hidden mt-2 w-full rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-200">Load more</button>
                     </div>
                     <form onsubmit="sendChatMessage(event)" class="flex gap-3">
                         <button type="button" onclick="toggleGifPicker()" class="rounded-xl bg-slate-700 hover:bg-slate-600 px-3 py-3 font-bold text-white" aria-label="Search GIFs">GIF</button>
@@ -6119,6 +6120,7 @@ async function deleteSelectedAdminWeek() {
 
     const GIF_MESSAGE_PREFIX = '[gif]';
     let gifSearchTimer = null;
+    let gifPickerState = { query: '', offset: 0, totalCount: 0, loadingMore: false };
 
     function getGifUrl(message) {
         if (typeof message !== 'string' || !message.startsWith(GIF_MESSAGE_PREFIX)) {
@@ -6160,17 +6162,25 @@ async function deleteSelectedAdminWeek() {
         document.getElementById('gif-picker')?.classList.add('hidden');
     }
 
-    async function loadGifs(query = '') {
+    async function loadGifs(query = '', { append = false } = {}) {
         const status = document.getElementById('gif-picker-status');
         const results = document.getElementById('gif-results');
+        const loadMoreBtn = document.getElementById('gif-load-more');
         if (!status || !results) return;
 
-        status.innerText = 'Loading GIFs…';
-        results.replaceChildren();
+        if (append) {
+            gifPickerState.loadingMore = true;
+            if (loadMoreBtn) { loadMoreBtn.disabled = true; loadMoreBtn.innerText = 'Loading…'; }
+        } else {
+            gifPickerState = { query, offset: 0, totalCount: 0, loadingMore: false };
+            status.innerText = 'Loading GIFs…';
+            results.replaceChildren();
+            loadMoreBtn?.classList.add('hidden');
+        }
 
         const { data, error } = await supabaseClient.functions.invoke(
             'giphy-search',
-            { body: { query } }
+            { body: { query, offset: append ? gifPickerState.offset : 0 } }
         );
 
         if (error || !data?.gifs) {
@@ -6184,10 +6194,17 @@ async function deleteSelectedAdminWeek() {
                 }
             }
             status.innerText = detail;
+            if (append && loadMoreBtn) { loadMoreBtn.disabled = false; loadMoreBtn.innerText = 'Load more'; }
+            gifPickerState.loadingMore = false;
             return;
         }
 
-        status.innerText = data.gifs.length ? '' : 'No GIFs found.';
+        if (!append && !data.gifs.length) {
+            status.innerText = 'No GIFs found.';
+        } else {
+            status.innerText = '';
+        }
+
         data.gifs.forEach(gif => {
             if (!getGifUrl(GIF_MESSAGE_PREFIX + gif.url)) return;
 
@@ -6203,6 +6220,23 @@ async function deleteSelectedAdminWeek() {
             button.addEventListener('click', () => sendGif(gif.url));
             results.appendChild(button);
         });
+
+        gifPickerState.query = query;
+        gifPickerState.offset = (append ? gifPickerState.offset : 0) + data.gifs.length;
+        gifPickerState.totalCount = data.totalCount ?? gifPickerState.offset;
+        gifPickerState.loadingMore = false;
+
+        const hasMore = gifPickerState.offset < gifPickerState.totalCount;
+        if (loadMoreBtn) {
+            loadMoreBtn.classList.toggle('hidden', !hasMore);
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerText = 'Load more';
+        }
+    }
+
+    async function loadMoreGifs() {
+        if (gifPickerState.loadingMore) return;
+        await loadGifs(gifPickerState.query, { append: true });
     }
 
     async function sendGif(url) {
