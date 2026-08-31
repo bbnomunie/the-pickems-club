@@ -1,25 +1,29 @@
 <style>
   :root{
-    --bg:#0b1220;
-    --panel:#131c2e;
-    --panel-2:#0f1729;
-    --border:#233047;
-    --green:#22c55e;
-    --green-dim:#16532f;
-    --green-text:#86efac;
-    --blue:#3b82f6;
-    --blue-dim:#173a6b;
+    --bg:#020617;            /* slate-950 — matches site body */
+    --panel:#0f172a;         /* slate-900 — matches site cards */
+    --panel-2:#1e293b;       /* slate-800 — matches site inputs/secondary panels */
+    --border:#1e293b;        /* border-slate-800 — matches site card borders */
+    --border-input:#334155;  /* border-slate-700 — matches site input borders */
+    --green:#059669;         /* emerald-600 — matches site's primary buttons */
+    --green-hover:#10b981;   /* emerald-500 — matches site's button hover */
+    --green-dim:rgba(16,185,129,.1);   /* bg-emerald-500/10 — matches site badges */
+    --green-text:#34d399;    /* emerald-400 — matches site's badge text */
+    --green-border:rgba(16,185,129,.2); /* border-emerald-500/20 */
+    --blue:#3b82f6;          /* blue-500 — matches site's chat/tiebreaker accents */
+    --blue-dim:rgba(59,130,246,.1);
     --blue-text:#93c5fd;
-    --gold-dim:#4a3b12;
-    --gold-text:#fcd34d;
+    --amber-dim:rgba(245,158,11,.1);
+    --amber-text:#fbbf24;
     --slate:#64748b;
-    --slate-dim:#1e2a3f;
-    --red:#f87171;
-    --red-dim:#4a1f1f;
-    --text:#e2e8f0;
-    --text-dim:#94a3b8;
-    --text-faint:#5b6b85;
-    --radius:14px;
+    --slate-dim:rgba(100,116,139,.15);
+    --red:#dc2626;           /* red-600 — matches site's danger/hover states */
+    --red-dim:rgba(248,113,113,.1);
+    --red-text:#f87171;
+    --text:#f1f5f9;          /* slate-100 — matches site body text */
+    --text-dim:#cbd5e1;      /* slate-300 — matches site secondary text */
+    --text-faint:#64748b;    /* slate-500 — matches site muted text */
+    --radius:16px;           /* rounded-2xl — matches site cards */
   }
   *{box-sizing:border-box}
   .dt-root{
@@ -50,7 +54,7 @@
   .dt-sum-card .num{font-size:18px;font-weight:800}
   .dt-sum-card .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);margin-top:3px;font-weight:700}
   .dt-sum-card.collected .num{color:var(--green-text)}
-  .dt-sum-card.owed .num{color:#fca5a5}
+  .dt-sum-card.owed .num{color:var(--red-text)}
 
   .dt-week-pill{
     display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);
@@ -65,7 +69,7 @@
   .dt-toggle-link{font-size:11px;color:var(--text-dim);cursor:pointer;text-decoration:underline;text-transform:none;letter-spacing:0;font-weight:700}
 
   .dt-player{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .15s ease}
-  .dt-player.expanded{border-color:#2c3d5c}
+  .dt-player.expanded{border-color:var(--border-input)}
   .dt-player.inactive{opacity:.55}
   .dt-player-row{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer}
   .dt-avatar{width:34px;height:34px;border-radius:50%;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--text-dim);flex-shrink:0;border:1px solid var(--border)}
@@ -74,12 +78,12 @@
   .dt-player-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;display:flex;align-items:center;gap:5px}
   .dt-method-tag{font-size:10.5px;color:var(--text-faint)}
   .dt-chip{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;white-space:nowrap;flex-shrink:0;cursor:pointer;user-select:none;border:1px solid transparent}
-  .dt-chip.paid{background:var(--green-dim);color:var(--green-text);border-color:#1f6b3a}
-  .dt-chip.skip{background:var(--slate-dim);color:var(--text-dim);border-color:#2c3d5c}
-  .dt-chip.unpaid{background:var(--red-dim);color:#fca5a5;border-color:#6b2b2b}
+  .dt-chip.paid{background:var(--green-dim);color:var(--green-text);border-color:var(--green-border)}
+  .dt-chip.skip{background:var(--slate-dim);color:var(--text-dim);border-color:var(--border-input)}
+  .dt-chip.unpaid{background:var(--red-dim);color:var(--red-text);border-color:rgba(220,38,38,.3)}
   .dt-balance{font-size:13px;font-weight:800;min-width:52px;text-align:right;flex-shrink:0}
   .dt-balance.pos{color:var(--green-text)}
-  .dt-balance.neg{color:#fca5a5}
+  .dt-balance.neg{color:var(--red-text)}
   .dt-caret{color:var(--text-faint);font-size:11px;transition:transform .15s ease;flex-shrink:0}
   .dt-player.expanded .dt-caret{transform:rotate(90deg)}
 
@@ -93,8 +97,8 @@
   }
   .dt-week-chip .wk-num{font-size:9px;opacity:.8}
   .dt-week-chip .wk-mark{font-size:12px;margin-top:1px}
-  .dt-week-chip.paid{background:var(--green-dim);color:var(--green-text);border-color:#1f6b3a}
-  .dt-week-chip.skip{background:var(--slate-dim);color:var(--text-dim);border-color:#2c3d5c}
+  .dt-week-chip.paid{background:var(--green-dim);color:var(--green-text);border-color:var(--green-border)}
+  .dt-week-chip.skip{background:var(--slate-dim);color:var(--text-dim);border-color:var(--border-input)}
   .dt-week-chip.future{opacity:.45}
 
   .dt-note{font-size:11px;color:var(--text-faint);margin-top:16px;line-height:1.6;padding:0 2px}
@@ -110,8 +114,8 @@
   .dt-sheet .sub{font-size:12px;color:var(--text-faint);margin-bottom:16px}
   .dt-field{margin-bottom:14px}
   .dt-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-faint);margin-bottom:6px}
-  .dt-field input{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-weight:600}
-  .dt-field input:focus{outline:none;border-color:var(--green)}
+  .dt-field input{width:100%;background:var(--bg);border:1px solid var(--border-input);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-weight:600}
+  .dt-field input:focus{outline:none;border-color:var(--green-hover)}
   .dt-radio-row{display:flex;gap:8px}
   .dt-radio-opt{
     flex:1;text-align:center;padding:11px 6px;border-radius:10px;border:1.5px solid var(--border);
@@ -119,25 +123,26 @@
   }
   .dt-radio-opt.active{border-color:var(--green);color:var(--green-text);background:var(--green-dim)}
   .dt-radio-opt.active.method-venmo{border-color:var(--blue);color:var(--blue-text);background:var(--blue-dim)}
-  .dt-radio-opt.active.method-cash{border-color:#d4a72c;color:var(--gold-text);background:var(--gold-dim)}
+  .dt-radio-opt.active.method-cash{border-color:#d97706;color:var(--amber-text);background:var(--amber-dim)}
   .dt-radio-opt.active.status-skip{border-color:var(--slate);color:var(--text-dim);background:var(--slate-dim)}
-  .dt-radio-opt.active.status-unpaid{border-color:var(--red);color:#fca5a5;background:var(--red-dim)}
+  .dt-radio-opt.active.status-unpaid{border-color:var(--red);color:var(--red-text);background:var(--red-dim)}
   .dt-sheet-actions{display:flex;gap:10px;margin-top:18px}
   .dt-btn{flex:1;padding:12px;border-radius:10px;font-weight:800;font-size:13.5px;border:none;cursor:pointer}
-  .dt-btn.primary{background:var(--green);color:#04140a}
-  .dt-btn.ghost{background:var(--panel-2);color:var(--text-dim);border:1px solid var(--border)}
+  .dt-btn.primary{background:var(--green);color:#ffffff}
+  .dt-btn.primary:hover{background:var(--green-hover)}
+  .dt-btn.ghost{background:var(--panel-2);color:var(--text-dim);border:1px solid var(--border-input)}
   .dt-btn[disabled]{opacity:.5;cursor:not-allowed}
 
-  .dt-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(10px);background:#0f1729;border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:700;opacity:0;transition:all .2s ease;z-index:60;pointer-events:none;max-width:88%;text-align:center}
+  .dt-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:700;opacity:0;transition:all .2s ease;z-index:60;pointer-events:none;max-width:88%;text-align:center}
   .dt-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .dt-toast.err{border-color:#6b2b2b;color:#fca5a5}
+  .dt-toast.err{border-color:rgba(220,38,38,.4);color:var(--red-text)}
 
   .dt-loading{padding:60px 20px;text-align:center;color:var(--text-faint);font-size:13px}
   .dt-login{padding:20px 4px}
   .dt-login .ball{font-size:36px;text-align:center;display:block;margin-bottom:6px}
   .dt-login h1{text-align:center;font-size:17px;margin:0 0 2px;font-weight:800}
   .dt-login p.sub{text-align:center;font-size:12.5px;color:var(--text-faint);margin:0 0 22px}
-  .dt-login-err{background:var(--red-dim);color:#fca5a5;border:1px solid #6b2b2b;padding:9px 12px;border-radius:10px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+  .dt-login-err{background:var(--red-dim);color:var(--red-text);border:1px solid rgba(220,38,38,.4);padding:9px 12px;border-radius:10px;font-size:12.5px;font-weight:600;margin-bottom:14px}
 </style>
 
 <div class="dt-root" id="dtRoot">
@@ -264,6 +269,7 @@
 
       const now = Date.now();
       weekMeta = (weekRows||[]).map((w, i)=> ({
+        id: w.id,
         index: i + 1,
         label: w.name || `Week ${w.week_number}`,
         locked: w.picks_lock_at ? new Date(w.picks_lock_at).getTime() <= now : false
@@ -280,15 +286,19 @@
       if(pErr) throw pErr;
       players = profileRows || [];
 
-      const { data: payRows, error: payErr } = await sb
-        .from('dues_payments').select('*').eq('season', settings.season);
-      if(payErr) throw payErr;
-
+      // Payments are keyed to each week's real, permanent id — never a position —
+      // so deleting/adding weeks elsewhere can never misattribute a payment.
+      const weekIds = weekMeta.map(w=>w.id);
       paymentsByPlayer = {};
-      (payRows || []).forEach(row=>{
-        if(!paymentsByPlayer[row.user_id]) paymentsByPlayer[row.user_id] = {};
-        paymentsByPlayer[row.user_id][row.week_number] = row;
-      });
+      if(weekIds.length){
+        const { data: payRows, error: payErr } = await sb
+          .from('dues_payments').select('*').in('week_id', weekIds);
+        if(payErr) throw payErr;
+        (payRows || []).forEach(row=>{
+          if(!paymentsByPlayer[row.user_id]) paymentsByPlayer[row.user_id] = {};
+          paymentsByPlayer[row.user_id][row.week_id] = row;
+        });
+      }
 
       render();
     } catch(e){
@@ -302,8 +312,8 @@
   // ============================================================
   // COMPUTATION HELPERS
   // ============================================================
-  function weekRow(userId, wk){
-    return (paymentsByPlayer[userId] || {})[wk] || null;
+  function weekRow(userId, weekId){
+    return (paymentsByPlayer[userId] || {})[weekId] || null;
   }
   function weeksPaidCount(userId){
     const rows = paymentsByPlayer[userId] || {};
@@ -313,10 +323,14 @@
     const rows = paymentsByPlayer[userId] || {};
     return Object.values(rows).filter(r=>r.status==='paid').reduce((s,r)=> s + Number(r.amount ?? settings.fee), 0);
   }
-  function weeksPlayedThrough(userId, upTo){
+  function weeksPlayedThrough(userId, upToIndex){
     const rows = paymentsByPlayer[userId] || {};
     let n = 0;
-    for(let w=1; w<=upTo; w++){ if(!(rows[w] && rows[w].status==='skipped')) n++; }
+    weekMeta.forEach(wm=>{
+      if(wm.index > upToIndex) return;
+      const row = rows[wm.id];
+      if(!(row && row.status === 'skipped')) n++;
+    });
     return n;
   }
   function amountOwed(userId){
@@ -343,6 +357,7 @@
           <div><h1>Pickems Dues</h1><p>${settings.season} Season</p></div>
         </div>
         <div class="dt-header-actions">
+          <button class="dt-gear" id="dtRefreshBtn" title="Refresh from schedule">⟳</button>
           <button class="dt-gear" id="dtGearBtn" title="Settings">⚙</button>
           <button class="dt-signout" id="dtSignOutBtn" title="Sign out">⎋</button>
         </div>
@@ -372,7 +387,8 @@
     } else {
       visiblePlayers.forEach(p=>{
         const bal = balance(p.id);
-        const curRow = weekRow(p.id, currentWeekIndex);
+        const currentWeekMeta = weekMeta[currentWeekIndex-1] || null;
+        const curRow = currentWeekMeta ? weekRow(p.id, currentWeekMeta.id) : null;
         const chipClass = curRow?.status === 'paid' ? 'paid' : curRow?.status === 'skipped' ? 'skip' : 'unpaid';
         const chipLabel = curRow?.status === 'paid' ? 'Paid' : curRow?.status === 'skipped' ? 'Skipped' : 'Unpaid';
         const isOpen = expandedId === p.id;
@@ -396,10 +412,10 @@
               <div class="dt-section-label" style="margin-top:0">Tap a week to set status</div>
               <div class="dt-weeks-flex">
                 ${weekMeta.map(wm=>{
-                  const row = weekRow(p.id, wm.index);
+                  const row = weekRow(p.id, wm.id);
                   const cls = row?.status === 'paid' ? 'paid' : row?.status === 'skipped' ? 'skip' : '';
                   const mark = row?.status === 'paid' ? '✓' : row?.status === 'skipped' ? '–' : '';
-                  return `<div class="dt-week-chip ${cls}" data-week="${p.id}:${wm.index}" title="${escapeHtml(wm.label)}">
+                  return `<div class="dt-week-chip ${cls}" data-week="${p.id}::${wm.id}" title="${escapeHtml(wm.label)}">
                             <span class="wk-num">Wk${wm.index}</span><span class="wk-mark">${mark}</span>
                           </div>`;
                 }).join('')}
@@ -418,6 +434,12 @@
 
   function bindEvents(){
     document.getElementById('dtGearBtn').addEventListener('click', openSettings);
+    document.getElementById('dtRefreshBtn').addEventListener('click', async ()=>{
+      const btn = document.getElementById('dtRefreshBtn');
+      btn.style.opacity = '0.5';
+      await loadAll();
+      toast('Refreshed from schedule');
+    });
     document.getElementById('dtSignOutBtn').addEventListener('click', async ()=>{
       await sb.auth.signOut();
       renderLogin();
@@ -440,15 +462,17 @@
       el.addEventListener('click', (e)=>{
         e.stopPropagation();
         const id = el.getAttribute('data-quickweek');
-        openWeekSheet(id, currentWeekIndex);
+        const currentWeekMeta = weekMeta[currentWeekIndex-1];
+        if(!currentWeekMeta){ toast('No current week yet', true); return; }
+        openWeekSheet(id, currentWeekMeta.id);
       });
     });
 
     root.querySelectorAll('[data-week]').forEach(el=>{
       el.addEventListener('click', (e)=>{
         e.stopPropagation();
-        const [id, wkStr] = el.getAttribute('data-week').split(':');
-        openWeekSheet(id, Number(wkStr));
+        const [id, weekId] = el.getAttribute('data-week').split('::');
+        openWeekSheet(id, weekId);
       });
     });
   }
@@ -456,15 +480,16 @@
   // ============================================================
   // WEEK STATUS SHEET (status + payment method + tag)
   // ============================================================
-  function openWeekSheet(userId, wk){
+  function openWeekSheet(userId, weekId){
     const player = players.find(p=>p.id===userId);
-    const existing = weekRow(userId, wk);
+    const existing = weekRow(userId, weekId);
     let status = existing?.status || 'unpaid';   // 'unpaid' | 'paid' | 'skipped'
     let method = existing?.payment_method || 'cashapp';
     let tag = existing?.payment_tag || '';
 
     function draw(){
-      const label = weekMeta[wk-1] ? weekMeta[wk-1].label : `Week ${wk}`;
+      const meta = weekMeta.find(wm=>wm.id===weekId);
+      const label = meta ? meta.label : 'This week';
       sheet.innerHTML = `
         <h2>${escapeHtml(label)} — ${escapeHtml(player.display_name)}</h2>
         <div class="sub">$${settings.fee} due this week</div>
@@ -513,34 +538,34 @@
       if(tagInput) tagInput.addEventListener('input', e=>{ tag = e.target.value; });
 
       document.getElementById('fCancel').addEventListener('click', closeSheet);
-      document.getElementById('fSave').addEventListener('click', ()=> saveWeek(userId, wk, status, method, tag));
+      document.getElementById('fSave').addEventListener('click', ()=> saveWeek(userId, weekId, status, method, tag));
     }
     draw();
   }
 
   function closeSheet(){ overlay.classList.remove('open'); }
 
-  async function saveWeek(userId, wk, status, method, tag){
+  async function saveWeek(userId, weekId, status, method, tag){
     const saveBtn = document.getElementById('fSave');
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     try {
       if(status === 'unpaid'){
         const { error } = await sb.from('dues_payments').delete()
-          .eq('user_id', userId).eq('season', settings.season).eq('week_number', wk);
+          .eq('user_id', userId).eq('week_id', weekId);
         if(error) throw error;
-        if(paymentsByPlayer[userId]) delete paymentsByPlayer[userId][wk];
+        if(paymentsByPlayer[userId]) delete paymentsByPlayer[userId][weekId];
       } else if(status === 'skipped'){
         const payload = {
-          user_id: userId, season: settings.season, week_number: wk,
+          user_id: userId, week_id: weekId,
           status: 'skipped', payment_method: null, payment_tag: null, amount: null,
           recorded_at: new Date().toISOString()
         };
         const { data, error } = await sb.from('dues_payments')
-          .upsert(payload, { onConflict: 'user_id,season,week_number' }).select().single();
+          .upsert(payload, { onConflict: 'user_id,week_id' }).select().single();
         if(error) throw error;
         if(!paymentsByPlayer[userId]) paymentsByPlayer[userId] = {};
-        paymentsByPlayer[userId][wk] = data;
+        paymentsByPlayer[userId][weekId] = data;
       } else { // paid
         if(method !== 'cash' && !tag.trim()){
           toast('Enter their ' + (method==='cashapp' ? '$cashtag' : 'Venmo username'), true);
@@ -548,17 +573,17 @@
           return;
         }
         const payload = {
-          user_id: userId, season: settings.season, week_number: wk,
+          user_id: userId, week_id: weekId,
           status: 'paid', payment_method: method,
           payment_tag: method === 'cash' ? null : tag.trim(),
           amount: settings.fee,
           recorded_at: new Date().toISOString()
         };
         const { data, error } = await sb.from('dues_payments')
-          .upsert(payload, { onConflict: 'user_id,season,week_number' }).select().single();
+          .upsert(payload, { onConflict: 'user_id,week_id' }).select().single();
         if(error) throw error;
         if(!paymentsByPlayer[userId]) paymentsByPlayer[userId] = {};
-        paymentsByPlayer[userId][wk] = data;
+        paymentsByPlayer[userId][weekId] = data;
       }
       closeSheet();
       render();
