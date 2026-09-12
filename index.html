@@ -411,15 +411,31 @@ body.light-theme footer{border-color:#dbe5ef!important}
                         Password
                     </label>
 
-                    <input
-                        type="password"
-                        id="password"
-                        required
-                        minlength="6"
-                        autocomplete="current-password"
-                        placeholder="••••••••"
-                        class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                    >
+                    <div class="relative">
+
+                        <input
+                            type="password"
+                            id="password"
+                            required
+                            minlength="6"
+                            autocomplete="current-password"
+                            placeholder="••••••••"
+                            class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 pr-11 text-white outline-none focus:border-emerald-500"
+                        >
+
+                        <button
+                            type="button"
+                            id="password-eye-btn"
+                            onclick="togglePasswordVisibility('password', 'password-eye-btn')"
+                            tabindex="-1"
+                            aria-label="Show password"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-300"
+                        >
+                            <svg class="eye-open w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="eye-closed hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -543,15 +559,31 @@ body.light-theme footer{border-color:#dbe5ef!important}
                             New Password
                         </label>
 
-                        <input
-                            type="password"
-                            id="reset-new-password"
-                            required
-                            minlength="6"
-                            autocomplete="new-password"
-                            placeholder="••••••••"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                        >
+                        <div class="relative">
+
+                            <input
+                                type="password"
+                                id="reset-new-password"
+                                required
+                                minlength="6"
+                                autocomplete="new-password"
+                                placeholder="••••••••"
+                                class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 pr-11 text-white outline-none focus:border-emerald-500"
+                            >
+
+                            <button
+                                type="button"
+                                id="reset-new-password-eye-btn"
+                                onclick="togglePasswordVisibility('reset-new-password', 'reset-new-password-eye-btn')"
+                                tabindex="-1"
+                                aria-label="Show password"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-300"
+                            >
+                                <svg class="eye-open w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="eye-closed hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -562,15 +594,31 @@ body.light-theme footer{border-color:#dbe5ef!important}
                             Confirm New Password
                         </label>
 
-                        <input
-                            type="password"
-                            id="reset-confirm-password"
-                            required
-                            minlength="6"
-                            autocomplete="new-password"
-                            placeholder="••••••••"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-emerald-500"
-                        >
+                        <div class="relative">
+
+                            <input
+                                type="password"
+                                id="reset-confirm-password"
+                                required
+                                minlength="6"
+                                autocomplete="new-password"
+                                placeholder="••••••••"
+                                class="w-full rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 pr-11 text-white outline-none focus:border-emerald-500"
+                            >
+
+                            <button
+                                type="button"
+                                id="reset-confirm-password-eye-btn"
+                                onclick="togglePasswordVisibility('reset-confirm-password', 'reset-confirm-password-eye-btn')"
+                                tabindex="-1"
+                                aria-label="Show password"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-300"
+                            >
+                                <svg class="eye-open w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="eye-closed hidden w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -744,6 +792,14 @@ body.light-theme footer{border-color:#dbe5ef!important}
         class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-white"
     >
         Leaderboard
+    </button>
+
+    <button
+        onclick="switchTab('picksboard')"
+        id="tab-picksboard"
+        class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-white"
+    >
+        Picks Board
     </button>
 
     <button
@@ -1069,6 +1125,44 @@ body.light-theme footer{border-color:#dbe5ef!important}
                 </div>
 
             </div>
+
+        </div>
+
+
+        <!-- ====================================================
+             PICKS BOARD
+             ==================================================== -->
+
+        <div
+            id="view-picksboard"
+            class="hidden space-y-4"
+        >
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+
+                <div class="flex items-center gap-3">
+                    <h3 class="text-xl font-black text-white">
+                        🗳️ Picks Board
+                    </h3>
+
+                    <span
+                        id="picksboard-week-title"
+                        class="text-xs rounded-full px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    >
+                        Viewing Week —
+                    </span>
+                </div>
+
+                <p class="text-sm text-slate-400 mt-1">
+                    See how everyone in the pool picked this week. Picks for a game stay hidden here until that week locks, so nobody can copy a pick before the deadline.
+                </p>
+
+            </div>
+
+            <div
+                id="picksboard-container"
+                class="space-y-4"
+            ></div>
 
         </div>
 
@@ -1635,6 +1729,8 @@ supabaseClient.auth.onAuthStateChange(
 
     let userPicks = {};
     let picksDirty = false;
+    let weekPickCounts = {}; // { [gameId]: { [teamName]: count, total: n } }
+    let weekAllPicks = [];   // [{ game_id, selected_team, display_name }] for locked weeks, used by Picks Board
     let tiebreakerDirty = false;
 
     let isSignUp = false;
@@ -2576,6 +2672,10 @@ supabaseClient.auth.onAuthStateChange(
         // exists. The Commissioner does not need to post the actual score.
         await loadTiebreaker();
 
+        // Pick counts only return data once the week is locked (see
+        // loadPickCounts), so this is a no-op teaser for open weeks.
+        await loadPickCounts();
+
         renderWeek();
         await loadWeeklyLeaderboard();
 
@@ -2636,6 +2736,230 @@ supabaseClient.auth.onAuthStateChange(
 
         });
 
+    }
+
+
+    // ============================================================
+    // PICK COUNTS (badges on Make Picks cards)
+    // ============================================================
+    // Only fetched/shown once the week is locked, so counts can never be
+    // used to see how the crowd is leaning before picks are due.
+
+    async function loadPickCounts() {
+
+        weekPickCounts = {};
+
+        if (!currentWeek || !isWeekLocked(currentWeek) || !currentGames.length) {
+            return;
+        }
+
+        const gameIds = currentGames.map(game => game.id);
+
+        const { data, error } =
+            await supabaseClient
+                .from('picks')
+                .select('game_id, selected_team')
+                .in('game_id', gameIds);
+
+        if (error) {
+            console.debug('Could not load pick counts:', error);
+            return;
+        }
+
+        (data || []).forEach(pick => {
+            if (!weekPickCounts[pick.game_id]) {
+                weekPickCounts[pick.game_id] = { total: 0 };
+            }
+
+            const bucket = weekPickCounts[pick.game_id];
+            bucket[pick.selected_team] = (bucket[pick.selected_team] || 0) + 1;
+            bucket.total += 1;
+        });
+
+    }
+
+
+    // ============================================================
+    // PICKS BOARD (who picked what, once the week is locked)
+    // ============================================================
+
+    async function loadPicksBoard() {
+
+        const container =
+            document.getElementById('picksboard-container');
+
+        const weekTitleEl =
+            document.getElementById('picksboard-week-title');
+
+        if (!container) {
+            return;
+        }
+
+        if (weekTitleEl) {
+            weekTitleEl.textContent = currentWeek
+                ? `Viewing ${currentWeek.name}`
+                : 'Viewing Week —';
+        }
+
+        if (!currentWeek || !currentGames.length) {
+            container.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-slate-500">
+                    No games loaded for this week yet.
+                </div>
+            `;
+            return;
+        }
+
+        if (!isWeekLocked(currentWeek)) {
+            container.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center">
+                    <div class="text-4xl mb-3">🔒</div>
+                    <h3 class="font-bold text-white">Picks are still open</h3>
+                    <p class="text-sm text-slate-500 mt-1">
+                        This board unlocks for everyone once picks lock for
+                        ${escapeHtml(currentWeek.name)}
+                        (${formatGameTime(currentWeek.picks_lock_at).day} ${formatGameTime(currentWeek.picks_lock_at).time}).
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-slate-500">
+                Loading picks...
+            </div>
+        `;
+
+        const gameIds = currentGames.map(game => game.id);
+
+        const { data: picks, error } =
+            await supabaseClient
+                .from('picks')
+                .select('game_id, selected_team, user_id')
+                .in('game_id', gameIds);
+
+        if (error) {
+            console.error(error);
+            container.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-red-400">
+                    Could not load the picks board.
+                </div>
+            `;
+            return;
+        }
+
+        const userIds = [...new Set((picks || []).map(pick => pick.user_id))];
+
+        let namesById = {};
+
+        if (userIds.length) {
+            const { data: profiles } =
+                await supabaseClient
+                    .from('profiles')
+                    .select('id, display_name')
+                    .in('id', userIds);
+
+            namesById = Object.fromEntries(
+                (profiles || []).map(profile => [profile.id, profile.display_name || 'Player'])
+            );
+        }
+
+        // Group picks by game, then by chosen team.
+        const byGame = {};
+        (picks || []).forEach(pick => {
+            if (!byGame[pick.game_id]) {
+                byGame[pick.game_id] = {};
+            }
+            const bucket = byGame[pick.game_id];
+            const name = namesById[pick.user_id] || 'Player';
+            if (!bucket[pick.selected_team]) {
+                bucket[pick.selected_team] = [];
+            }
+            bucket[pick.selected_team].push(name);
+        });
+
+        Object.values(byGame).forEach(bucket => {
+            Object.values(bucket).forEach(names => names.sort((a, b) => a.localeCompare(b)));
+        });
+
+        container.innerHTML = '';
+
+        currentGames.forEach(game => {
+
+            const kickoff = formatGameTime(game.kickoff_at);
+            const bucket = byGame[game.id] || {};
+            const awayNames = bucket[game.away_team] || [];
+            const homeNames = bucket[game.home_team] || [];
+
+            const card = document.createElement('div');
+            card.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4';
+
+            const nameList = (names) => names.length
+                ? `
+                    <ul class="mt-2 space-y-1">
+                        ${names.map(name => `
+                            <li class="text-xs text-slate-300">
+                                ${escapeHtml(name)}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `
+                : `<p class="mt-2 text-xs text-slate-600">No picks</p>`;
+
+            card.innerHTML = `
+                <div class="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-3">
+                    ${kickoff.day} ${kickoff.time}
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <div class="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                        <div class="flex items-center gap-2">
+                            ${teamLogoImg(game.away_team, 'team-logo-inline')}
+                            <span class="text-sm font-bold text-slate-200">${escapeHtml(game.away_team)}</span>
+                            <span class="ml-auto text-xs font-black text-emerald-400">${awayNames.length}</span>
+                        </div>
+                        ${nameList(awayNames)}
+                    </div>
+
+                    <div class="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                        <div class="flex items-center gap-2">
+                            ${teamLogoImg(game.home_team, 'team-logo-inline')}
+                            <span class="text-sm font-bold text-slate-200">${escapeHtml(game.home_team)}</span>
+                            <span class="ml-auto text-xs font-black text-emerald-400">${homeNames.length}</span>
+                        </div>
+                        ${nameList(homeNames)}
+                    </div>
+
+                </div>
+            `;
+
+            container.appendChild(card);
+
+        });
+
+    }
+
+
+    function togglePasswordVisibility(inputId, btnId) {
+        const input = document.getElementById(inputId);
+        const btn = document.getElementById(btnId);
+
+        if (!input || !btn) {
+            return;
+        }
+
+        const willShow = input.type === 'password';
+        input.type = willShow ? 'text' : 'password';
+
+        const openIcon = btn.querySelector('.eye-open');
+        const closedIcon = btn.querySelector('.eye-closed');
+
+        if (openIcon) openIcon.classList.toggle('hidden', willShow);
+        if (closedIcon) closedIcon.classList.toggle('hidden', !willShow);
+
+        btn.setAttribute('aria-label', willShow ? 'Hide password' : 'Show password');
     }
 
 
@@ -3091,6 +3415,21 @@ supabaseClient.auth.onAuthStateChange(
                     ? '— No Result'
                     : '✓ Your Pick';
 
+        // Pick-count badge: only ever populated (via loadPickCounts) once
+        // the week is locked, so this never leaks live counts pre-deadline.
+        const counts = weekPickCounts[game.id];
+        const teamCount = counts ? (counts[team] || 0) : 0;
+        const totalCount = counts ? counts.total : 0;
+        const pickPercent = totalCount > 0 ? Math.round((teamCount / totalCount) * 100) : 0;
+
+        const countBadge = (locked && counts && totalCount > 0)
+            ? `
+                <div class="mt-2 text-[10px] text-slate-500 font-semibold">
+                    ${teamCount}/${totalCount} picked (${pickPercent}%)
+                </div>
+            `
+            : '';
+
         return `
 
             <button
@@ -3155,6 +3494,8 @@ supabaseClient.auth.onAuthStateChange(
                     `
                     : ''
                 }
+
+                ${countBadge}
 
             </button>
 
@@ -3822,6 +4163,7 @@ supabaseClient.auth.onAuthStateChange(
         const views = {
             picks: document.getElementById('view-picks'),
             leaderboard: document.getElementById('view-leaderboard'),
+            picksboard: document.getElementById('view-picksboard'),
             chat: document.getElementById('view-chat'),
             commissioner: document.getElementById('view-commissioner')
         };
@@ -3829,6 +4171,7 @@ supabaseClient.auth.onAuthStateChange(
         const buttons = {
             picks: document.getElementById('tab-picks'),
             leaderboard: document.getElementById('tab-leaderboard'),
+            picksboard: document.getElementById('tab-picksboard'),
             chat: document.getElementById('tab-chat'),
             commissioner: document.getElementById('tab-commissioner')
         };
@@ -3862,6 +4205,11 @@ supabaseClient.auth.onAuthStateChange(
             document.getElementById('pool-payment-card')?.classList.add('hidden');
             loadLeaderboard();
             triggerLeaderboardConfetti();
+        } else if (tab === 'picksboard') {
+            views.picksboard?.classList.remove('hidden');
+            if (buttons.picksboard) buttons.picksboard.className = 'pb-3 border-b-2 border-blue-500 text-blue-600 font-bold';
+            document.getElementById('pool-payment-card')?.classList.add('hidden');
+            loadPicksBoard();
         } else if (tab === 'chat') {
             views.chat?.classList.remove('hidden');
             if (buttons.chat) buttons.chat.className = 'pb-3 border-b-2 border-blue-500 text-blue-600 font-bold relative';
@@ -6842,6 +7190,8 @@ async function deleteSelectedAdminWeek() {
             description.innerText =
                 formatWeekLockDescription();
         }
+
+        await loadPickCounts();
 
         renderGames();
         updateProgress();
