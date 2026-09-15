@@ -229,7 +229,21 @@ body.light-theme .team-button.incorrect{border-color:#dc2626!important;backgroun
 body.light-theme .team-button.winner-team{border-color:#ca8a04;box-shadow:0 0 0 1px rgba(202,138,4,.2)}
 body.light-theme .team-button.voided{border-color:#94a3b8!important;background:rgba(148,163,184,.15)!important;box-shadow:none;opacity:.8}
 body.light-theme .spinner{border-color:rgba(15,23,42,.18);border-top-color:#2563eb}
-body.light-theme input,body.light-theme select,body.light-theme textarea{color:#0f172a!important}
+body.light-theme input,body.light-theme select,body.light-theme textarea{color:#0f172a!important};
+body.light-theme #tiebreaker-save-reminder,
+body.light-theme #tiebreaker-save-reminder *{
+    color:#991b1b!important;
+    opacity:1!important;
+}
+body.light-theme #tiebreaker-save-reminder{
+    background:#fef2f2!important;
+    border-color:#f87171!important;
+    color:#991b1b!important;
+}
+body.light-theme #tiebreaker-save-reminder strong{
+    color:#7f1d1d!important;
+    font-weight:800!important;
+}
 body.light-theme footer{border-color:#dbe5ef!important}
 </style></head>
 
@@ -962,6 +976,10 @@ body.light-theme footer{border-color:#dbe5ef!important}
                         </div>
                         <p id="tiebreaker-game" class="text-sm text-slate-500 mt-1">Loading Monday night game...</p>
                         <p id="tiebreaker-subtext" class="text-xs text-slate-400 mt-2">Predict the combined Monday night score. Your prediction locks with the rest of the week at the Commissioner’s deadline.</p>
+                            <div id="tiebreaker-save-reminder" class="mt-3 flex items-start gap-3 rounded-xl border border-red-300/70 bg-red-50 px-3 py-2.5 text-sm text-red-700 shadow-sm dark:border-red-500/40 dark:bg-red-950/30 dark:text-red-300" role="note" aria-label="Important tiebreaker save reminder">
+                                <span class="mt-0.5 text-base" aria-hidden="true">⚠️</span>
+                                <div><strong class="font-extrabold">IMPORTANT:</strong> Your tiebreaker score and weekly picks are saved separately. Be sure to click <strong>Save Score</strong> for the tiebreaker <strong>AND</strong> <strong>Save Picks</strong> for your weekly picks.</div>
+                            </div>
                     </div>
                     <div class="flex items-end gap-3">
                         <div>
