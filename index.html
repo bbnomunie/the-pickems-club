@@ -192,6 +192,31 @@
             }
         }
     </style>
+
+<style>
+/* Chat input: wraps long messages and grows as the user types. */
+#chat-input {
+    width: 100%;
+    min-height: 46px;
+    max-height: 180px;
+    overflow-y: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    resize: none;
+    line-height: 1.45;
+}
+
+/* User's own chat bubbles are lighter in light mode so dark text remains readable. */
+body.light-theme #chat-messages .bg-blue-600,
+body.light-theme #chat-messages .bg-blue-600 * {
+    color: #0f172a !important;
+}
+body.light-theme #chat-messages .bg-blue-600 {
+    background: #bfdbfe !important;
+    border-color: #93c5fd !important;
+}
+</style>
 <style>
 body.light-theme{background:#f4f8fc!important;color:#0f172a!important}
 body.light-theme .glass{background:rgba(255,255,255,.97)!important;backdrop-filter:blur(10px)}
@@ -1227,7 +1252,7 @@ body.light-theme footer{border-color:#dbe5ef!important}
                     </div>
                     <form onsubmit="sendChatMessage(event)" class="flex gap-3">
                         <button type="button" onclick="toggleGifPicker()" class="rounded-xl bg-slate-700 hover:bg-slate-600 px-3 py-3 font-bold text-white" aria-label="Search GIFs">GIF</button>
-                        <input id="chat-input" maxlength="500" autocomplete="off" class="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-blue-500" placeholder="Type a message...">
+                        <textarea id="chat-input" maxlength="500" autocomplete="off" rows="1" class="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-white outline-none focus:border-blue-500" placeholder="Type a message..." aria-label="Chat message"></textarea>
                         <button type="submit" class="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 font-bold text-white">Send</button>
                     </form>
                 </div>
@@ -7354,6 +7379,39 @@ async function deleteSelectedAdminWeek() {
         initializeApp
     );
 
+</script>
+
+
+<script>
+(function () {
+    const chatInput = document.getElementById('chat-input');
+    if (!chatInput) return;
+
+    function autoGrowChatInput() {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
+        chatInput.style.overflowY = chatInput.scrollHeight > 180 ? 'auto' : 'hidden';
+    }
+
+    chatInput.addEventListener('input', autoGrowChatInput);
+
+    chatInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            const form = chatInput.closest('form');
+            if (form) {
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+            }
+        }
+    });
+
+    chatInput.addEventListener('focus', autoGrowChatInput);
+    autoGrowChatInput();
+})();
 </script>
 
 </body>
