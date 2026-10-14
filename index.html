@@ -4857,6 +4857,21 @@ supabaseClient.auth.onAuthStateChange(
         if (day === 1) lines.push({ mood: 'angry',  text: "Monday night. The tiebreaker is watching you." });
         if (day === 2) lines.push({ mood: 'normal', text: "Tuesday: time to see who got humbled this week." });
 
+        // theme-aware lines (reads whichever theme is on right now)
+        const hour = new Date().getHours();
+        const nightTime = hour >= 21 || hour < 5;
+
+        if (document.body.classList.contains('light-theme')) {
+            lines.push({ mood: 'laugh', text: `I see you don't use dark mode, ${name}. Scared of the dark?` });
+            lines.push({ mood: 'oh',    text: "Light theme, huh? Bold. My eyes are watering over here." });
+            if (nightTime) {
+                lines.push({ mood: 'scared', text: `Light theme at this hour, ${name}? Your eyeballs called. They want a word.` });
+            }
+        } else {
+            lines.push({ mood: 'happy', text: `I see you use the dark theme, ${name}. Welcome to the dark side!` });
+            lines.push({ mood: 'laugh', text: "Dark mode gang. Smart. Your eyes and your battery say thanks." });
+        }
+
         return lines;
     }
 
@@ -4871,12 +4886,16 @@ supabaseClient.auth.onAuthStateChange(
 
         if (context.length && Math.random() < 0.55) pool = context;
 
-        let choice = null;
-        for (let tries = 0; tries < 12; tries++) {
-            const candidate = pool[Math.floor(Math.random() * pool.length)];
-            if (!lilCy.recent.includes(candidate.text)) { choice = candidate; break; }
+        // Prefer lines not said recently. If the contextual pool is used up,
+        // fall back to the generic pool; never repeat the line just said.
+        const fresh = arr => arr.filter(l => !lilCy.recent.includes(l.text));
+        let candidates = fresh(pool);
+        if (!candidates.length) candidates = fresh(LILCY_LINES);
+        if (!candidates.length) {
+            const lastSaid = lilCy.recent[lilCy.recent.length - 1];
+            candidates = LILCY_LINES.filter(l => l.text !== lastSaid);
         }
-        choice = choice || pool[Math.floor(Math.random() * pool.length)];
+        const choice = candidates[Math.floor(Math.random() * candidates.length)];
 
         lilCy.recent.push(choice.text);
         if (lilCy.recent.length > 8) lilCy.recent.shift();
