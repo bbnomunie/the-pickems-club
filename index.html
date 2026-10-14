@@ -6,6 +6,16 @@
 
     <title>THE PICKEMS CLUB</title>
 
+    <!-- Installable app (PWA) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Pickems">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -350,12 +360,76 @@ body.light-theme footer{border-color:#dbe5ef!important}
                 >
                     Logout
                 </button>
+
+                <button
+                    id="nav-menu-btn"
+                    type="button"
+                    onclick="toggleNavMenu(event)"
+                    aria-label="Open navigation menu"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="nav-menu-panel"
+                    class="relative rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-2 text-slate-300 hover:bg-slate-700 transition shrink-0"
+                >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <span id="nav-menu-dot" style="display:none; position:absolute; top:-4px; right:-4px; width:10px; height:10px; border-radius:9999px; background:#ef4444;"></span>
+                </button>
             </div>
 
         </div>
 
     </div>
+
+    <!-- NAV MENU PANEL -->
+    <div
+        id="nav-menu-panel"
+        role="menu"
+        class="hidden absolute right-4 top-full mt-1 w-56 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl p-2"
+    >
+        <button type="button" role="menuitem" data-nav-tab="picks" onclick="navMenuGo('picks')" class="nav-menu-item">
+            <span>🏈</span><span>Make Picks</span>
+        </button>
+        <button type="button" role="menuitem" data-nav-tab="leaderboard" onclick="navMenuGo('leaderboard')" class="nav-menu-item">
+            <span>🏆</span><span>Leader Board</span>
+        </button>
+        <button type="button" role="menuitem" data-nav-tab="picksboard" onclick="navMenuGo('picksboard')" class="nav-menu-item">
+            <span>🗳️</span><span>Picks Board</span>
+        </button>
+        <button type="button" role="menuitem" data-nav-tab="chat" onclick="navMenuGo('chat')" class="nav-menu-item">
+            <span>💬</span><span>Chat</span>
+            <span id="nav-menu-chat-badge" style="display:none; margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:#ef4444; color:#fff; font-size:10px; font-weight:900; align-items:center; justify-content:center;">0</span>
+        </button>
+        <button type="button" role="menuitem" id="nav-mascot-toggle" onclick="toggleLilCy()" class="nav-menu-item">
+            <span>🧢</span><span id="nav-mascot-label">Hide Lil Cy</span>
+        </button>
+        <div id="nav-install-section" style="display:none; margin-top:0.25rem; padding-top:0.25rem; border-top:1px solid rgba(100,116,139,.35);">
+            <button type="button" role="menuitem" onclick="installApp()" class="nav-menu-item">
+                <span>📲</span><span>Install App</span>
+            </button>
+        </div>
+    </div>
 </header>
+
+<style>
+    .nav-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        text-align: left;
+        padding: 0.7rem 0.85rem;
+        border-radius: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: inherit;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+    }
+    .nav-menu-item:hover { background: rgba(100,116,139,.18); }
+    .nav-menu-item.active { background: rgba(16,185,129,.14); color: #10b981; }
+    body.light-theme .nav-menu-item.active { background: rgba(37,99,235,.1); color: #2563eb; }
+</style>
 
 
 <!-- ============================================================
@@ -940,7 +1014,7 @@ body.light-theme footer{border-color:#dbe5ef!important}
 
                         <select
                             id="week-selector"
-                            onchange="changeWeek()"
+                            onchange="changeWeek(this)"
                             class="rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
                         ></select>
 
@@ -1072,18 +1146,28 @@ body.light-theme footer{border-color:#dbe5ef!important}
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
 
-                <div class="p-5 border-b border-slate-800">
+                <div class="p-5 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
 
-                    <h3 class="text-xl font-black text-white">
-                        📅 This Week
-                    </h3>
+                    <div>
 
-                    <p
-                        id="weekly-leaderboard-subtitle"
-                        class="text-sm text-slate-400 mt-1"
-                    >
-                        Weekly standings update as games are scored. Tiebreaker breaks ties when available.
-                    </p>
+                        <h3 class="text-xl font-black text-white">
+                            📅 This Week
+                        </h3>
+
+                        <p
+                            id="weekly-leaderboard-subtitle"
+                            class="text-sm text-slate-400 mt-1"
+                        >
+                            Weekly standings update as games are scored. Tiebreaker breaks ties when available.
+                        </p>
+
+                    </div>
+
+                    <select
+                        id="leaderboard-week-selector"
+                        onchange="changeWeek(this)"
+                        class="rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    ></select>
 
                 </div>
 
@@ -1204,17 +1288,25 @@ body.light-theme footer{border-color:#dbe5ef!important}
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
 
-                <div class="flex items-center gap-3">
-                    <h3 class="text-xl font-black text-white">
-                        🗳️ Picks Board
-                    </h3>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-xl font-black text-white">
+                            🗳️ Picks Board
+                        </h3>
 
-                    <span
-                        id="picksboard-week-title"
-                        class="text-xs rounded-full px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    >
-                        Viewing Week —
-                    </span>
+                        <span
+                            id="picksboard-week-title"
+                            class="text-xs rounded-full px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        >
+                            Viewing Week —
+                        </span>
+                    </div>
+
+                    <select
+                        id="picksboard-week-selector"
+                        onchange="changeWeek(this)"
+                        class="rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white outline-none focus:border-emerald-500"
+                    ></select>
                 </div>
 
                 <p class="text-sm text-slate-400 mt-1">
@@ -1813,63 +1905,107 @@ supabaseClient.auth.onAuthStateChange(
     let initializedUserId = null;
 
 
-    function selectedWeekStorageKey() {
-        return currentUser
-            ? `pickems_selected_week_${currentUser.id}`
-            : 'pickems_selected_week';
-    }
-
+    // The week the site is currently showing is held in memory only
+    // (never restored from storage), so a refresh always lands on the
+    // real current week.
+    const WEEK_SELECTOR_IDS = [
+        'week-selector',
+        'leaderboard-week-selector',
+        'picksboard-week-selector'
+    ];
 
     function getPreferredWeekId() {
-
-        return (
-            document.getElementById('week-selector')?.value
-            || currentWeek?.id
-            || sessionStorage.getItem(selectedWeekStorageKey())
-            || null
-        );
-
+        return currentWeek?.id || null;
     }
-
 
     function rememberSelectedWeek(weekId) {
-
-        if (!weekId) {
-            return;
-        }
-
-        sessionStorage.setItem(
-            selectedWeekStorageKey(),
-            String(weekId)
-        );
-
-        const selector =
-            document.getElementById('week-selector');
-
-        if (
-            selector &&
-            weeks.some(
-                week => String(week.id) === String(weekId)
-            )
-        ) {
-            selector.value = weekId;
-        }
-
+        if (!weekId) return;
+        syncWeekSelectors(weekId);
     }
 
+    function populateWeekSelectors() {
+        WEEK_SELECTOR_IDS.forEach(id => {
+            const selector = document.getElementById(id);
+            if (!selector) return;
+            selector.innerHTML = '';
+            weeks.forEach(week => {
+                const option = document.createElement('option');
+                option.value = week.id;
+                option.textContent = `${week.season_year} • ${week.name}`;
+                selector.appendChild(option);
+            });
+        });
+        if (currentWeek) syncWeekSelectors(currentWeek.id);
+    }
 
-    function pickDefaultWeek(weekList) {
+    function syncWeekSelectors(weekId) {
+        if (!weekId || !weeks.some(w => String(w.id) === String(weekId))) return;
+        WEEK_SELECTOR_IDS.forEach(id => {
+            const selector = document.getElementById(id);
+            if (selector) selector.value = weekId;
+        });
+    }
 
-        const now = Date.now();
-
-        return (
-            weekList.find(
-                week =>
-                    new Date(week.picks_lock_at).getTime() > now
-            )
-            || weekList[0]
+    // Weeks sorted oldest -> newest across seasons.
+    function sortedWeeksAscending(weekList) {
+        return [...weekList].sort((a, b) =>
+            (a.season_year - b.season_year) || (a.week_number - b.week_number)
         );
+    }
 
+    // Synchronous fallback: the first week whose deadline has not passed,
+    // otherwise the most recent week (not Week 1).
+    function pickDefaultWeek(weekList) {
+        const sorted = sortedWeeksAscending(weekList);
+        const now = Date.now();
+        return (
+            sorted.find(w => new Date(w.picks_lock_at).getTime() > now)
+            || sorted[sorted.length - 1]
+        );
+    }
+
+    // The "current" week: while the most recently locked week still has
+    // unfinished games (and locked within the last 6 days), stay on it so
+    // players can follow scores. Otherwise move to the next upcoming week.
+    // Wrapper that also remembers the real current week's id (used by Lil Cy).
+    async function determineCurrentWeek(weekList) {
+        const result = await determineCurrentWeekRaw(weekList);
+        window.lilCyActualWeekId = result?.id ?? null;
+        return result;
+    }
+
+    async function determineCurrentWeekRaw(weekList) {
+        if (!weekList || !weekList.length) return null;
+
+        const sorted = sortedWeeksAscending(weekList);
+        const now = Date.now();
+        const lockTime = w => new Date(w.picks_lock_at).getTime();
+
+        const upcoming = sorted.find(w => lockTime(w) > now) || null;
+        const lockedWeeks = sorted.filter(w => lockTime(w) <= now);
+        const lastLocked = lockedWeeks.length ? lockedWeeks[lockedWeeks.length - 1] : null;
+
+        if (!lastLocked) return upcoming || sorted[sorted.length - 1];
+        if (!upcoming) return lastLocked;
+
+        const sixDays = 6 * 24 * 60 * 60 * 1000;
+        if (now - lockTime(lastLocked) > sixDays) return upcoming;
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('games')
+                .select('id, winner')
+                .eq('week_id', lastLocked.id);
+
+            if (!error && data && data.length) {
+                const unfinished = data.some(g => !g.winner);
+                return unfinished ? lastLocked : upcoming;
+            }
+        } catch (e) {
+            console.debug('Current week check failed:', e);
+        }
+
+        return upcoming;
     }
 
 
@@ -2480,7 +2616,7 @@ supabaseClient.auth.onAuthStateChange(
         initializeCommissionerUI();
 
         await loadPoolSettings();
-        await loadWeeks();
+        await loadWeeks(true);
         await loadLeaderboard();
 
         // Initialize chat notifications even before the Chat tab is opened.
@@ -2598,7 +2734,7 @@ supabaseClient.auth.onAuthStateChange(
     // WEEKS
     // ============================================================
 
-    async function loadWeeks() {
+    async function loadWeeks(forceCurrent = false) {
 
         const {
             data,
@@ -2628,29 +2764,9 @@ supabaseClient.auth.onAuthStateChange(
 
         weeks = data || [];
 
-
-        const selector =
-            document.getElementById('week-selector');
-
-        selector.innerHTML = '';
-
-
-        weeks.forEach(week => {
-
-            const option =
-                document.createElement('option');
-
-            option.value = week.id;
-
-            option.textContent =
-                `${week.season_year} • ${week.name}`;
-
-            selector.appendChild(option);
-
-        });
-
-
         if (!weeks.length) {
+
+            populateWeekSelectors();
 
             showToast(
                 'No weeks have been configured yet.',
@@ -2661,25 +2777,27 @@ supabaseClient.auth.onAuthStateChange(
         }
 
 
-        const preferredWeekId = getPreferredWeekId();
-        const rememberedWeek = resolveWeekById(preferredWeekId);
+        // On login / page load (forceCurrent) always go to the real
+        // current week. Admin actions that reload weeks keep whichever
+        // week is already being viewed.
+        const keepWeek = !forceCurrent
+            ? resolveWeekById(getPreferredWeekId())
+            : null;
 
-        currentWeek = rememberedWeek || pickDefaultWeek(weeks);
+        currentWeek = keepWeek || await determineCurrentWeek(weeks);
 
-        rememberSelectedWeek(currentWeek.id);
-
+        populateWeekSelectors();
 
         await loadCurrentWeek();
 
     }
 
 
-    async function changeWeek() {
+    async function changeWeek(sourceEl) {
 
         const id =
-            document
-                .getElementById('week-selector')
-                .value;
+            (sourceEl && sourceEl.value)
+            || document.getElementById('week-selector').value;
 
         currentWeek =
             weeks.find(
@@ -2692,6 +2810,26 @@ supabaseClient.auth.onAuthStateChange(
         picksDirty = false;
         tiebreakerDirty = false;
 
+        await loadCurrentWeek();
+
+    }
+
+
+    // Called when the player opens Make Picks / Leader Board / Picks Board:
+    // snap back to the current week, unless they have unsaved picks.
+    async function resetToCurrentWeek() {
+
+        if (!weeks.length || picksDirty || tiebreakerDirty) return;
+
+        const target = await determineCurrentWeek(weeks);
+
+        if (!target || (currentWeek && String(target.id) === String(currentWeek.id))) {
+            syncWeekSelectors(currentWeek?.id);
+            return;
+        }
+
+        currentWeek = target;
+        syncWeekSelectors(target.id);
         await loadCurrentWeek();
 
     }
@@ -2742,6 +2880,10 @@ supabaseClient.auth.onAuthStateChange(
 
         renderWeek();
         await loadWeeklyLeaderboard();
+
+        if (currentTab === 'picksboard') {
+            await loadPicksBoard();
+        }
 
     }
 
@@ -3002,6 +3144,105 @@ supabaseClient.auth.onAuthStateChange(
             container.appendChild(card);
 
         });
+
+        await renderPicksBoardTiebreakers(container, userIds, namesById);
+
+    }
+
+
+    // Box at the bottom of the Picks Board listing every player's
+    // tiebreaker prediction. Only called after the week has locked.
+    async function renderPicksBoardTiebreakers(container, pickerIds, namesById) {
+
+        if (!currentWeek || !isWeekLocked(currentWeek)) {
+            return;
+        }
+
+        const isPreseason = Number(currentWeek.season_type) === 1;
+        const heading = isPreseason ? 'Final Game Tiebreaker' : 'Monday Night Tiebreaker';
+        const weekAtRequest = currentWeek.id;
+
+        const { data: tbPicks, error } =
+            await supabaseClient
+                .from('tiebreaker_picks')
+                .select('user_id, predicted_total')
+                .eq('week_id', currentWeek.id);
+
+        // The player switched weeks or tabs while this was loading.
+        if (!currentWeek || String(currentWeek.id) !== String(weekAtRequest)) {
+            return;
+        }
+
+        const box = document.createElement('div');
+        box.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4';
+
+        if (error) {
+            console.error(error);
+            box.innerHTML = `
+                <h3 class="font-black text-white">🌕 ${heading} Predictions</h3>
+                <p class="text-sm text-red-400 mt-2">Could not load tiebreaker predictions.</p>
+            `;
+            container.appendChild(box);
+            return;
+        }
+
+        const predictions = {};
+        (tbPicks || []).forEach(row => {
+            predictions[row.user_id] = row.predicted_total;
+        });
+
+        // Names for anyone who predicted but wasn't already looked up.
+        const missingIds = Object.keys(predictions).filter(id => !namesById[id]);
+
+        if (missingIds.length) {
+            const { data: profiles } =
+                await supabaseClient
+                    .from('profiles')
+                    .select('id, display_name')
+                    .in('id', missingIds);
+
+            (profiles || []).forEach(profile => {
+                namesById[profile.id] = profile.display_name || 'Player';
+            });
+        }
+
+        // Everyone who made picks or a prediction this week.
+        const allIds = [...new Set([...pickerIds, ...Object.keys(predictions)])];
+
+        const rows = allIds
+            .map(id => ({
+                name: namesById[id] || 'Player',
+                total: predictions[id]
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (!rows.length) {
+            box.innerHTML = `
+                <h3 class="font-black text-white">🌕 ${heading} Predictions</h3>
+                <p class="text-sm text-slate-500 mt-2">No tiebreaker predictions were submitted for this week.</p>
+            `;
+            container.appendChild(box);
+            return;
+        }
+
+        box.innerHTML = `
+            <div class="flex items-center gap-2 mb-3">
+                <h3 class="font-black text-white">🌕 ${heading} Predictions</h3>
+                <span class="ml-auto text-xs text-slate-500">Combined score</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                ${rows.map(row => `
+                    <div class="flex items-center justify-between rounded-xl bg-slate-950 border border-slate-800 px-3 py-2">
+                        <span class="text-sm font-semibold text-white truncate">${escapeHtml(row.name)}</span>
+                        <span class="ml-3 text-sm font-black ${row.total == null ? 'text-slate-600' : 'text-emerald-400'}">
+                            ${row.total == null ? '—' : escapeHtml(String(row.total))}
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        container.appendChild(box);
 
     }
 
@@ -3840,6 +4081,8 @@ supabaseClient.auth.onAuthStateChange(
         }
 
 
+        window.lilCyStandings = data || [];
+
         tbody.innerHTML = '';
 
 
@@ -4004,6 +4247,7 @@ supabaseClient.auth.onAuthStateChange(
         }
 
         const rows = sortWeeklyStandings(data || []);
+        window.lilCyWeekStandings = { weekId: currentWeek.id, rows };
 
         if (!rows.length) {
             tbody.innerHTML = `
@@ -4282,6 +4526,10 @@ supabaseClient.auth.onAuthStateChange(
             }
         });
 
+        if (tab === 'picks' || tab === 'leaderboard' || tab === 'picksboard') {
+            resetToCurrentWeek().catch(err => console.debug('Week reset failed:', err));
+        }
+
         if (tab === 'picks') {
             views.picks?.classList.remove('hidden');
             if (buttons.picks) buttons.picks.className = 'pb-3 border-b-2 border-blue-500 text-blue-600 font-bold';
@@ -4351,7 +4599,513 @@ supabaseClient.auth.onAuthStateChange(
         });
     }
 
+    // ------------------------------------------------------------
+    // LIL CY (floating mascot with thought bubbles)
+    // ------------------------------------------------------------
+
+    // Edit these lists to change what Lil Cy says.
+    // Tokens: {name} = player's first name, {week} = current week name.
+    // Moods: normal, happy, sad, angry, scared, laugh, oh.
+    const LILCY_LINES = [
+        // friendly
+        { mood: 'happy',  text: "Hey {name}! Lil Cy here. Make some good picks today." },
+        { mood: 'happy',  text: "Good luck this week, {name}. I'm rooting for you. Mostly." },
+        { mood: 'happy',  text: "Big head, tiny body, huge heart." },
+        { mood: 'happy',  text: "Trustme, it's a foam finger, not a middle finger." },
+        { mood: 'happy',  text: "Every champion started with a terrible Week 1." },
+        { mood: 'happy',  text: "I'm available for high fives. Foam finger's ready. #1!" },
+        { mood: 'happy',  text: "Nice work out there, {name}. Keep it up." },
+        { mood: 'happy',  text: "Pro tip: making your picks before lock is the secret. You're welcome." },
+        { mood: 'happy',  text: "Shoutout to everyone in this pool. Even the ones about to lose to me." },
+        { mood: 'happy',  text: "A great week is one pick away, {name}." },
+        { mood: 'happy',  text: "You've got this, {name}. Probably. Maybe. I believe!" },
+        { mood: 'happy',  text: "Good vibes only. Okay, good vibes and a little trash talk." },
+        { mood: 'happy',  text: "This pool is better with you in it, {name}." },
+        { mood: 'happy',  text: "Another week, another chance to be right about something." },
+        { mood: 'happy',  text: "Thanks for reading my bubble. That counts as a pick." },
+        { mood: 'normal', text: "Hydrate. Stretch. Pick your games. In that order." },
+        { mood: 'normal', text: "It's just for fun. Except the bragging rights. Those are forever." },
+        { mood: 'normal', text: "You miss 100% of the picks you don't make." },
+        { mood: 'normal', text: "Check the Picks Board after lock. The gossip is half the fun." },
+        { mood: 'normal', text: "Fun fact: I have no neck. Still pick better than half of you." },
+        { mood: 'normal', text: "Tiebreaker tip: it's the combined score of the Monday night game." },
+        { mood: 'normal', text: "Tap my face for more wisdom. Or less. Mostly less." },
+        { mood: 'normal', text: "Be nice to whoever is in last place. They've suffered enough." },
+        { mood: 'normal', text: "Underdog picks win weeks. Also lose them. Mostly lose them." },
+        { mood: 'normal', text: "Sunday plan: snacks, picks, beer, regret. Maybe not in that order." },
+        { mood: 'normal', text: "Everybody's a genius until Sunday afternoon." },
+        // trash talk
+        { mood: 'angry',  text: "Somebody in this pool is picking with their heart. It's showing." },
+        { mood: 'angry',  text: "Bold strategy: ignore every stat and trust the vibes. How's that going?" },
+        { mood: 'angry',  text: "Nobody is safe this week. Not even you, {name}." },
+        { mood: 'angry',  text: "Picking the underdog again? Bold. Usually wrong, but bold." },
+        { mood: 'angry',  text: "Winning the weekly pool is easy. You should try it sometime." },
+        { mood: 'angry',  text: "Your confidence is impressive. Your record, less so." },
+        { mood: 'angry',  text: "I've seen better picks from a coin flip. The coin was winning." },
+        { mood: 'angry',  text: "If picks were a sport, some of you would still be in the preseason." },
+        { mood: 'angry',  text: "Somebody here has missed four weeks in a row. I'm not saying who. Okay, it might be you, {name}." },
+        { mood: 'angry',  text: "You call that a strategy? I call that Tuesday regret." },
+        { mood: 'angry',  text: "Your picks are a cry for help. A funny one." },
+        { mood: 'angry',  text: "Sit down, {name}. Nobody is a lock of the week." },
+        { mood: 'laugh',  text: "Ha! Imagine picking the home team just because it's home." },
+        { mood: 'laugh',  text: "I'm not laughing at you, {name}. I'm laughing near you." },
+        { mood: 'laugh',  text: "That pick you just made? I felt it from here. Ha!" },
+        { mood: 'laugh',  text: "Last week called. It wants its bad picks back." },
+        { mood: 'laugh',  text: "Pick the favorite, they said. It's safe, they said. Ha ha ha." },
+        { mood: 'laugh',  text: "I can't look. Okay, I'm looking. This is great." },
+        { mood: 'laugh',  text: "Monday night tiebreaker guesses are my favorite. So much chaos." },
+        { mood: 'normal', text: "My grandma picks better, and she thinks the Bears are a zoo thing." },
+        { mood: 'normal', text: "Tiebreaker tip: guess a number, then watch it be wrong anyway." },
+        { mood: 'normal', text: "I picked all my games in 4 seconds. Same result as you, probably." },
+        { mood: 'normal', text: "My foam finger says #1. Yours says participant." },
+        { mood: 'normal', text: "If I had a dollar for every bad pick in this pool, I'd win the entry fees back." },
+        { mood: 'normal', text: "Trash talk is just love with better sound effects." },
+        { mood: 'sad',    text: "Last place gets nothing but my deepest sympathy." },
+        { mood: 'sad',    text: "I don't always pick the favorite. When I do, I still lose." },
+        { mood: 'sad',    text: "Some of you pick with confidence. Others with prayer. I respect the prayer." },
+        { mood: 'scared', text: "Your picks make me want to pull my beanie over my eyes." },
+        { mood: 'scared', text: "Wait, picks lock soon? Did I leave the stove on? Did YOU pick?" },
+        { mood: 'scared', text: "I've seen the standings. Some of you should look away." },
+        // edgy trash talk
+        { mood: 'angry', text: "{name}, your picks are so bad the Picks Board should come with a warning label." },
+        { mood: 'laugh', text: "I'd say good luck, but we both know luck isn't the problem." },
+        { mood: 'laugh', text: "I love hang over Mondays!." },
+        { mood: 'angry', text: "You pick like you're allergic to winning. Impressive consistency, though." },
+        { mood: 'laugh', text: "Fantasy football called. Even they don't want your opinions." },
+        { mood: 'angry', text: "If bad picks paid out, {name}, you'd be in the black by now." },
+        { mood: 'angry', text: "Heads up: the pool trophy has a seat reserved for someone. Not you." },
+        { mood: 'laugh', text: "I've seen sharper picks from a guy who thinks a field goal is a soccer term. Wait, is it?" },
+        { mood: 'angry', text: "Go ahead, trust your gut. It's wrong, but go ahead." },
+        // surprised
+        { mood: 'oh', text: "Ohhh. Did you see that pick? OH." },
+        { mood: 'oh', text: "Wait, you picked THAT team?!" },
+        { mood: 'oh', text: "Whoa, somebody's on a hot streak. Is it you, {name}?" },
+        { mood: 'oh', text: "Plot twist: the underdog won. Again." },
+        { mood: 'oh', text: "OH! Is that a perfect week I smell?" },
+        { mood: 'oh', text: "Hold on. A tiebreaker decided by one point? Oh boy." },
+        { mood: 'oh', text: "Ooooh, spicy. That upset is going to wreck some picks." },
+        { mood: 'oh', text: "Wait, {name}, you can pick more than one favorite? ...No? Okay." }
+    ];
+
+    const lilCy = {
+        hidden: false,
+        timer: null,
+        hideTimer: null,
+        recent: [],
+        lastTapAt: 0,
+        greeted: false
+    };
+
+    function lilCyFirstName() {
+        const full = currentProfile?.display_name || currentUser?.user_metadata?.display_name || '';
+        return (full.trim().split(/\s+/)[0]) || 'champ';
+    }
+
+    function lilCyFill(text) {
+        return text
+            .replace(/\{name\}/g, lilCyFirstName())
+            .replace(/\{week\}/g, currentWeek?.name || 'this week');
+    }
+
+    function lilCyTimeLeft(ms) {
+        const mins = Math.max(1, Math.round(ms / 60000));
+        if (mins < 60) return `${mins} min`;
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return `${hours}h ${mins % 60}m`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ${hours % 24}h`;
+    }
+
+    // Lines that depend on what's happening in the pool right now.
+    function lilCyContextLines() {
+        const lines = [];
+        const name = lilCyFirstName();
+        const now = Date.now();
+
+        if (currentWeek && currentGames?.length) {
+            const lockMs = new Date(currentWeek.picks_lock_at).getTime() - now;
+
+            if (!isWeekLocked(currentWeek)) {
+                const empty = currentGames.filter(g => !userPicks[g.id]).length;
+
+                if (empty > 0) {
+                    const left = lilCyTimeLeft(lockMs);
+                    const urgent = lockMs < 3 * 3600 * 1000;
+                    const plural = empty === 1 ? 'pick' : 'picks';
+                    const text = urgent
+                        ? `${name}!! ${empty} empty ${plural} and ${currentWeek.name} locks in ${left}!`
+                        : `${name}, you still have ${empty} empty ${plural} for ${currentWeek.name}. Locks in ${left}.`;
+                    // weighted heavily so reminders actually show up
+                    const mood = urgent ? 'scared' : 'angry';
+                    for (let i = 0; i < 3; i++) lines.push({ mood, text });
+                } else {
+                    lines.push({ mood: 'happy', text: `All picks are in for ${currentWeek.name}. Look at you being responsible, ${name}.` });
+                }
+            } else {
+                lines.push({ mood: 'angry',  text: `${currentWeek.name} is locked. No take-backs, ${name}.` });
+                lines.push({ mood: 'normal', text: `Picks are locked. Go see who picked the same as you on the Picks Board.` });
+            }
+        }
+
+        const standings = window.lilCyStandings;
+        if (Array.isArray(standings) && standings.length >= 3) {
+            const leader = standings[0];
+            const last = standings[standings.length - 1];
+            const meId = currentUser?.id;
+
+            if (leader.user_id === meId) {
+                lines.push({ mood: 'happy', text: `You're #1 in the pool, ${name}. Don't let it go to your head. Mine's big enough for both of us.` });
+            } else if (leader.display_name) {
+                lines.push({ mood: 'angry', text: `${leader.display_name} is leading the pool. Suspicious.` });
+            }
+
+            if (last.user_id === meId) {
+                lines.push({ mood: 'sad', text: `Last place, ${name}? I believe in you. Barely.` });
+            } else if (last.display_name) {
+                lines.push({ mood: 'laugh', text: `${last.display_name} is in last place. Bless their heart.` });
+            }
+        }
+
+        // Weekly standings lines: only for the real current week.
+        const wk = window.lilCyWeekStandings;
+        if (
+            wk && Array.isArray(wk.rows) && wk.rows.length &&
+            currentWeek && String(wk.weekId) === String(currentWeek.id) &&
+            window.lilCyActualWeekId != null &&
+            String(currentWeek.id) === String(window.lilCyActualWeekId)
+        ) {
+            const rows = wk.rows;
+            const wkName = currentWeek.name;
+            const meId = currentUser?.id;
+            const wins = r => r.correct_picks || 0;
+            const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+            const leader = rows[0];
+            const tiedFirst = rows.filter(r => wins(r) === wins(leader));
+            const mine = rows.find(r => r.user_id === meId);
+
+            // first place
+            if (tiedFirst.length === 1) {
+                if (leader.user_id === meId) {
+                    lines.push({ mood: 'happy', text: `You're on top of ${wkName}, ${name}. Enjoy it. Monday night is coming.` });
+                } else if (leader.display_name) {
+                    lines.push({ mood: 'angry', text: `${leader.display_name} is leading ${wkName} with ${plural(wins(leader), 'win')}. Suspicious.` });
+                }
+            } else if (tiedFirst.length >= 2) {
+                if (mine && tiedFirst.includes(mine)) {
+                    lines.push({ mood: 'scared', text: `You're tied for first in ${wkName}, ${name}. Don't choke.` });
+                } else if (tiedFirst[0].display_name && tiedFirst[1].display_name) {
+                    lines.push({ mood: 'oh', text: `${tiedFirst[0].display_name} and ${tiedFirst[1].display_name} are tied for first in ${wkName}. The tiebreaker is going to be chaos.` });
+                }
+            }
+
+            // last place this week
+            if (rows.length >= 3) {
+                const last = rows[rows.length - 1];
+                if (wins(last) < wins(leader)) {
+                    if (last.user_id === meId) {
+                        lines.push({ mood: 'sad', text: `Bottom of ${wkName}, ${name}? Deep breaths. There's always next week.` });
+                    } else if (last.display_name) {
+                        lines.push({ mood: 'laugh', text: `${last.display_name} is bringing up the rear in ${wkName}. Bless their heart.` });
+                    }
+                }
+            }
+
+            // close race between 1st and 5th
+            if (rows.length >= 5) {
+                const gap = wins(leader) - wins(rows[4]);
+                if (gap === 0) {
+                    lines.push({ mood: 'oh', text: `The top five are all tied in ${wkName}. This is going to be a mess.` });
+                } else if (gap === 1) {
+                    lines.push({ mood: 'oh', text: `Only one win separates 1st and 5th in ${wkName}. Anybody can take it.` });
+                }
+            }
+
+            // the player's own week
+            if (mine) {
+                const w = wins(mine);
+                const l = Math.max(0, (mine.completed_picks || 0) - w);
+                const rank = 1 + rows.filter(r => wins(r) > w).length;
+                const own = [];
+
+                if ((w + l) >= 2) {
+                    if (l === 0 && w >= 3) {
+                        own.push({ mood: 'oh', text: `${w}-0 in ${wkName}, ${name}?! Okay, show-off.` });
+                    } else if (w > l) {
+                        own.push({ mood: 'happy', text: `You're ${w}-${l} this week, ${name}. Not bad.` });
+                    } else if (w === l) {
+                        own.push({ mood: 'normal', text: `${w}-${l} this week, ${name}. Perfectly average.` });
+                    } else if (w === 0) {
+                        own.push({ mood: 'sad', text: `0-${l} so far in ${wkName}, ${name}? Ouch. Oh boy.` });
+                    } else {
+                        own.push({ mood: 'sad', text: `${w}-${l} this week, ${name}. Rough, but it's not over.` });
+                    }
+                }
+
+                if (rank > 1 && rank <= 3 && rows.length >= 4) {
+                    own.push({ mood: 'happy', text: `You're #${rank} in ${wkName}. Podium territory, ${name}.` });
+                }
+
+                // personal lines get double weight
+                own.forEach(line => { lines.push(line); lines.push(line); });
+            }
+        }
+
+        const day = new Date().getDay();
+        if (day === 4) lines.push({ mood: 'scared', text: "Thursday night football means an early lock. Pick now!" });
+        if (day === 0) lines.push({ mood: 'scared', text: "Sunday football. Everything is fine. Everything is fine." });
+        if (day === 1) lines.push({ mood: 'angry',  text: "Monday night. The tiebreaker is watching you." });
+        if (day === 2) lines.push({ mood: 'normal', text: "Tuesday: time to see who got humbled this week." });
+
+        return lines;
+    }
+
+    function lilCyPickLine() {
+        const context = lilCyContextLines();
+        let pool = LILCY_LINES;
+
+        if (!lilCy.greeted) {
+            lilCy.greeted = true;
+            return { mood: 'happy', text: lilCyFill("Hey {name}! Lil Cy here. Tap me if you want trash talk. Just don't tap my belly!") };
+        }
+
+        if (context.length && Math.random() < 0.55) pool = context;
+
+        let choice = null;
+        for (let tries = 0; tries < 12; tries++) {
+            const candidate = pool[Math.floor(Math.random() * pool.length)];
+            if (!lilCy.recent.includes(candidate.text)) { choice = candidate; break; }
+        }
+        choice = choice || pool[Math.floor(Math.random() * pool.length)];
+
+        lilCy.recent.push(choice.text);
+        if (lilCy.recent.length > 8) lilCy.recent.shift();
+
+        return { mood: choice.mood, text: lilCyFill(choice.text) };
+    }
+
+    function lilCyCanShow() {
+        const dashboard = document.getElementById('app-dashboard');
+        if (!currentUser || !dashboard || dashboard.classList.contains('hidden')) return false;
+        if (lilCy.hidden || document.hidden || currentTab === 'chat') return false;
+        return true;
+    }
+
+    function lilCyCanSpeak() {
+        if (!lilCyCanShow()) return false;
+        if (picksDirty || tiebreakerDirty) return false;
+        const el = document.activeElement;
+        if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return false;
+        return true;
+    }
+
+    function lilCySay(line) {
+        const bubble = document.getElementById('lilcy-bubble');
+        const text = document.getElementById('lilcy-text');
+        const head = document.getElementById('lilcy-head');
+        if (!bubble || !text || !head) return;
+
+        clearTimeout(lilCy.hideTimer);
+        text.textContent = line.text;
+        head.src = `mascot-${line.mood}.png`;
+        head.className = `lc-head m-${line.mood}`;
+        bubble.classList.add('show');
+
+        const ms = 4500 + line.text.length * 55;
+        lilCy.hideTimer = setTimeout(lilCyQuiet, ms);
+    }
+
+    function lilCyQuiet() {
+        const bubble = document.getElementById('lilcy-bubble');
+        const head = document.getElementById('lilcy-head');
+        if (bubble) bubble.classList.remove('show');
+        if (head) {
+            head.src = 'mascot-normal.png';
+            head.className = 'lc-head m-normal';
+        }
+    }
+
+    function lilCySchedule(firstDelay) {
+        clearTimeout(lilCy.timer);
+        const delay = firstDelay ?? (15000 + Math.random() * 10000);
+        lilCy.timer = setTimeout(() => {
+            if (lilCyCanSpeak()) lilCySay(lilCyPickLine());
+            lilCySchedule();
+        }, delay);
+    }
+
+    function lilCyTap() {
+        const now = Date.now();
+        if (now - lilCy.lastTapAt < 1200) return;
+        lilCy.lastTapAt = now;
+        lilCySay(lilCyPickLine());
+        lilCySchedule();
+    }
+
+    // Poking his belly makes him mad.
+    function lilCyBelly(event) {
+        if (event) event.stopPropagation();
+        const now = Date.now();
+        if (now - lilCy.lastTapAt < 800) return;
+        lilCy.lastTapAt = now;
+        lilCySay({ mood: 'angry', text: "Hey, that's too low buddy!" });
+        lilCySchedule();
+    }
+
+    function lilCySyncVisibility() {
+        const box = document.getElementById('lilcy');
+        if (box) box.classList.toggle('lc-on', lilCyCanShow());
+        const label = document.getElementById('nav-mascot-label');
+        if (label) label.textContent = lilCy.hidden ? 'Show Lil Cy' : 'Hide Lil Cy';
+        if (!lilCyCanShow()) lilCyQuiet();
+    }
+
+    function setLilCyHidden(hidden) {
+        lilCy.hidden = !!hidden;
+        try { localStorage.setItem('lilcy_hidden', hidden ? '1' : '0'); } catch (e) {}
+        lilCySyncVisibility();
+    }
+
+    function toggleLilCy() {
+        setNavMenuOpen(false);
+        setLilCyHidden(!lilCy.hidden);
+        if (!lilCy.hidden) lilCySchedule(1500);
+    }
+
+    function initLilCy() {
+        try { lilCy.hidden = localStorage.getItem('lilcy_hidden') === '1'; } catch (e) {}
+
+        ['normal', 'happy', 'sad', 'angry', 'scared', 'laugh', 'oh'].forEach(m => {
+            const img = new Image();
+            img.src = `mascot-${m}.png`;
+        });
+
+        lilCySyncVisibility();
+        setInterval(lilCySyncVisibility, 1000);
+        lilCySchedule(3000);
+    }
+
+    window.addEventListener('load', initLilCy);
+
+
+    // ------------------------------------------------------------
+    // INSTALLABLE APP (PWA)
+    // ------------------------------------------------------------
+
+    let deferredInstallPrompt = null;
+
+    function isStandaloneApp() {
+        return window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true;
+    }
+
+    function isIosDevice() {
+        return /iphone|ipad|ipod/i.test(navigator.userAgent)
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function updateInstallMenuItem() {
+        const section = document.getElementById('nav-install-section');
+        if (!section) return;
+        const canInstall = !isStandaloneApp() && (deferredInstallPrompt || isIosDevice());
+        section.style.display = canInstall ? 'block' : 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        updateInstallMenuItem();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        updateInstallMenuItem();
+        showToast('App installed. Look for Pickems on your home screen!', 'success');
+    });
+
+    async function installApp() {
+        setNavMenuOpen(false);
+
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            try { await deferredInstallPrompt.userChoice; } catch (e) {}
+            deferredInstallPrompt = null;
+            updateInstallMenuItem();
+            return;
+        }
+
+        if (isIosDevice()) {
+            showToast('On iPhone/iPad: tap the Share button in Safari, then "Add to Home Screen".', 'success');
+            return;
+        }
+
+        showToast('Use your browser menu and choose "Install app" or "Add to Home Screen".', 'success');
+    }
+
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(err =>
+                console.debug('Service worker registration failed:', err)
+            );
+        });
+    }
+
+    updateInstallMenuItem();
+
+
+    // ------------------------------------------------------------
+    // HAMBURGER NAV MENU
+    // ------------------------------------------------------------
+
+    function setNavMenuOpen(open) {
+        const panel = document.getElementById('nav-menu-panel');
+        const btn = document.getElementById('nav-menu-btn');
+        if (!panel || !btn) return;
+
+        panel.classList.toggle('hidden', !open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) updateInstallMenuItem();
+
+        if (open) {
+            panel.querySelectorAll('[data-nav-tab]').forEach(item => {
+                item.classList.toggle('active', item.dataset.navTab === currentTab);
+            });
+        }
+    }
+
+    function toggleNavMenu(event) {
+        if (event) event.stopPropagation();
+        const panel = document.getElementById('nav-menu-panel');
+        setNavMenuOpen(panel ? panel.classList.contains('hidden') : false);
+    }
+
+    function navMenuGo(tab) {
+        setNavMenuOpen(false);
+        switchTab(tab);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.addEventListener('click', event => {
+        const panel = document.getElementById('nav-menu-panel');
+        if (!panel || panel.classList.contains('hidden')) return;
+        if (!panel.contains(event.target)) setNavMenuOpen(false);
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') setNavMenuOpen(false);
+    });
+
     function updateChatUnreadBadge() {
+        const menuBadge = document.getElementById('nav-menu-chat-badge');
+        const menuDot = document.getElementById('nav-menu-dot');
+        if (menuBadge) {
+            menuBadge.textContent = chatUnreadCount > 99 ? '99+' : String(chatUnreadCount);
+            menuBadge.style.display = chatUnreadCount > 0 ? 'flex' : 'none';
+        }
+        if (menuDot) {
+            menuDot.style.display = chatUnreadCount > 0 ? 'block' : 'none';
+        }
+
         const badge = document.getElementById('chat-unread-badge');
         if (!badge) return;
 
@@ -7187,26 +7941,9 @@ async function deleteSelectedAdminWeek() {
                 lastWeekRefreshSignature = signature;
                 weeks = latestWeeks;
 
-                const selector = document.getElementById('week-selector');
-                if (selector) {
-                    selector.innerHTML = '';
-                    weeks.forEach(week => {
-                        const option = document.createElement('option');
-                        option.value = week.id;
-                        option.textContent = `${week.season_year} • ${week.name}`;
-                        selector.appendChild(option);
-                    });
-
-                    const rememberedWeek = resolveWeekById(selectedId);
-
-                    if (rememberedWeek) {
-                        currentWeek = rememberedWeek;
-                        rememberSelectedWeek(currentWeek.id);
-                    } else {
-                        currentWeek = pickDefaultWeek(weeks);
-                        rememberSelectedWeek(currentWeek.id);
-                    }
-                }
+                const rememberedWeek = resolveWeekById(selectedId);
+                currentWeek = rememberedWeek || await determineCurrentWeek(weeks);
+                populateWeekSelectors();
 
                 if (currentWeek) await loadCurrentWeek();
             } else if (currentWeek) {
@@ -7412,6 +8149,198 @@ async function deleteSelectedAdminWeek() {
     chatInput.addEventListener('focus', autoGrowChatInput);
     autoGrowChatInput();
 })();
+</script>
+
+
+<!-- LIL CY MASCOT -->
+<style>
+    #lilcy {
+        --lc-w: 100px;
+        position: fixed;
+        left: 6px;
+        bottom: 6px;
+        width: var(--lc-w);
+        height: calc(var(--lc-w) * 1.82);
+        z-index: 35;
+        pointer-events: none;
+        display: none;
+    }
+    #lilcy.lc-on { display: block; }
+    @media (max-width: 640px) { #lilcy { --lc-w: 74px; } }
+
+    #lilcy .lc-figure {
+        position: absolute; inset: 0;
+        pointer-events: auto;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        animation: lcFloat 3.6s ease-in-out infinite;
+    }
+    #lilcy .lc-body {
+        position: absolute;
+        width: 84.2%;
+        left: 7.9%;
+        top: 65.3%;
+    }
+    #lilcy .lc-body svg { display: block; width: 100%; height: auto; overflow: visible; }
+    #lilcy .lc-head {
+        position: absolute; left: 0; top: 0; width: 100%; height: auto;
+        transform-origin: 50% 92%;
+        filter: drop-shadow(0 3px 4px rgba(0,0,0,.35));
+        user-select: none; -webkit-user-drag: none;
+    }
+    #lilcy .lc-head.m-normal  { animation: lcTilt 4.2s ease-in-out infinite; }
+    #lilcy .lc-head.m-happy   { animation: lcBounce .55s ease-in-out 4; }
+    #lilcy .lc-head.m-sad     { animation: lcSlump 2.8s ease-in-out infinite; }
+    #lilcy .lc-head.m-angry   { animation: lcShake .32s linear infinite; }
+    #lilcy .lc-head.m-scared  { animation: lcTremble .11s linear infinite; }
+    #lilcy .lc-head.m-laugh   { animation: lcLaugh .3s ease-in-out infinite; }
+    #lilcy .lc-head.m-oh      { animation: lcPop .5s ease-out 1, lcTilt 4.2s ease-in-out .5s infinite; }
+
+    #lilcy #arm-left  { animation: lcWaveL 2.6s ease-in-out infinite; }
+    #lilcy #arm-right { animation: lcWaveR 3.1s ease-in-out infinite; }
+
+    #lilcy .lc-belly {
+        position: absolute;
+        left: 22%; width: 56%;
+        top: 80%; height: 12%;
+        z-index: 4;
+        pointer-events: auto;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #lilcy .lc-close {
+        position: absolute; top: -2px; left: -2px;
+        width: 20px; height: 20px; border-radius: 9999px; border: 0;
+        background: rgba(15,23,42,.75); color: #fff; font-size: 13px; line-height: 20px;
+        padding: 0; cursor: pointer; pointer-events: auto; opacity: .7;
+    }
+    #lilcy .lc-close:hover { opacity: 1; }
+
+    #lilcy .lc-bubble {
+        position: absolute;
+        left: 82%;
+        top: -6px;
+        width: max-content;
+        max-width: min(230px, calc(100vw - var(--lc-w) - 28px));
+        padding: 10px 14px;
+        border-radius: 22px;
+        background: #ffffff;
+        color: #0f172a;
+        border: 2px solid #94a3b8;
+        box-shadow: 0 6px 18px rgba(0,0,0,.35);
+        font-size: 13px; font-weight: 700; line-height: 1.3;
+        opacity: 0; transform: scale(.6) translateY(8px);
+        transform-origin: 0% 100%;
+        transition: opacity .25s ease, transform .25s ease;
+        pointer-events: none;
+        z-index: 3;
+    }
+    #lilcy .lc-bubble.show { opacity: 1; transform: scale(1) translateY(0); }
+    #lilcy .lc-bubble::before,
+    #lilcy .lc-bubble::after {
+        content: ''; position: absolute; border-radius: 9999px;
+        background: #ffffff; border: 2px solid #94a3b8;
+    }
+    #lilcy .lc-bubble::before { width: 12px; height: 12px; left: -10px; bottom: -14px; }
+    #lilcy .lc-bubble::after  { width: 7px;  height: 7px;  left: -20px; bottom: -24px; }
+
+    @keyframes lcFloat  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    @keyframes lcTilt   { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+    @keyframes lcBounce { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-9px) scale(1.04); } }
+    @keyframes lcSlump  { 0%,100% { transform: rotate(5deg) translateY(4px); } 50% { transform: rotate(8deg) translateY(7px); } }
+    @keyframes lcShake  { 0%,100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-3px) rotate(-2deg); } 75% { transform: translateX(3px) rotate(2deg); } }
+    @keyframes lcLaugh  { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-5px) rotate(4deg); } }
+    @keyframes lcPop    { 0% { transform: scale(.85); } 45% { transform: scale(1.12); } 100% { transform: scale(1); } }
+    @keyframes lcTremble{ 0%,100% { transform: translateX(-1.5px); } 50% { transform: translateX(1.5px); } }
+    @keyframes lcWaveL  { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+    @keyframes lcWaveR  { 0%,100% { transform: rotate(5deg); } 50% { transform: rotate(-6deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        #lilcy .lc-figure, #lilcy .lc-head, #lilcy #arm-left, #lilcy #arm-right { animation: none !important; }
+        #lilcy .lc-bubble { transition: none; }
+    }
+</style>
+
+<div id="lilcy" aria-label="Lil Cy, the Pickems mascot">
+    <div class="lc-bubble" id="lilcy-bubble" role="status"><span id="lilcy-text"></span></div>
+    <div class="lc-figure" onclick="lilCyTap()" title="Tap Lil Cy">
+        <div class="lc-body">
+<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <g stroke="#1e293b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- cleats -->
+    <ellipse cx="74" cy="140" rx="17" ry="8" fill="#111827"/>
+    <ellipse cx="126" cy="140" rx="17" ry="8" fill="#111827"/>
+    <!-- skinny legs -->
+    <rect x="78" y="100" width="11" height="36" rx="5" fill="#f0c9a8"/>
+    <rect x="111" y="100" width="11" height="36" rx="5" fill="#f0c9a8"/>
+    <!-- tube socks -->
+    <rect x="77" y="120" width="13" height="15" rx="4" fill="#ffffff"/>
+    <rect x="77" y="124" width="13" height="3" fill="#a51c30" stroke="none"/>
+    <rect x="110" y="120" width="13" height="15" rx="4" fill="#ffffff"/>
+    <rect x="110" y="124" width="13" height="3" fill="#a51c30" stroke="none"/>
+    <!-- way-too-small pants -->
+    <path d="M66 86 H134 L130 106 H104 L100 98 L96 106 H70 Z" fill="#94a3b8"/>
+    <!-- jersey torso (a little short, belly peeking) -->
+    <path d="M60 8 Q100 -2 140 8 L148 78 Q100 88 52 78 Z" fill="#a51c30"/>
+    <path d="M62 70 Q100 80 138 70 L139 80 Q100 89 61 80 Z" fill="#7f1526" stroke="none"/>
+    <ellipse cx="100" cy="84" rx="30" ry="6" fill="#f0c9a8" stroke="none"/>
+    <!-- jersey stripes + number -->
+    <path d="M58 22 Q100 12 142 22" fill="none" stroke="#cbd5e1" stroke-width="5"/>
+    <text x="100" y="62" text-anchor="middle" font-family="Impact, Arial Black, sans-serif" font-size="38" font-weight="900" fill="#ffffff" stroke="#475569" stroke-width="1.5">1</text>
+  </g>
+
+  <!-- left arm holding foam finger -->
+  <g id="arm-left" style="transform-origin: 58px 22px;">
+    <path d="M58 22 Q40 36 26 62" fill="none" stroke="#1e293b" stroke-width="11" stroke-linecap="round"/>
+    <path d="M58 22 Q40 36 26 62" fill="none" stroke="#f0c9a8" stroke-width="7.5" stroke-linecap="round"/>
+    <g stroke="#1e293b" stroke-width="2" stroke-linejoin="round">
+      <path d="M8 66 L8 46 Q8 40 14 40 L16 40 L16 16 Q16 9 23 9 Q30 9 30 16 L30 40 L32 40 Q38 40 38 46 L38 66 Q23 72 8 66 Z" fill="#ffffff"/>
+      <path d="M8 56 L8 66 Q23 72 38 66 L38 56 Z" fill="#a51c30" stroke="none"/>
+    </g>
+    <text x="23" y="63" text-anchor="middle" font-family="Impact, Arial Black, sans-serif" font-size="11" font-weight="900" fill="#ffffff">#1</text>
+    <circle cx="26" cy="62" r="5.5" fill="#f0c9a8" stroke="#1e293b" stroke-width="2"/>
+  </g>
+
+  <!-- right arm holding football -->
+  <g id="arm-right" style="transform-origin: 142px 22px;">
+    <path d="M142 22 Q160 34 170 56" fill="none" stroke="#1e293b" stroke-width="11" stroke-linecap="round"/>
+    <path d="M142 22 Q160 34 170 56" fill="none" stroke="#f0c9a8" stroke-width="7.5" stroke-linecap="round"/>
+    <g transform="rotate(-35 176 52)">
+      <ellipse cx="176" cy="52" rx="19" ry="11" fill="#92400e" stroke="#451a03" stroke-width="2"/>
+      <path d="M169 52 H183 M172 48 V56 M176 48 V56 M180 48 V56" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+    <circle cx="170" cy="57" r="5.5" fill="#f0c9a8" stroke="#1e293b" stroke-width="2"/>
+  </g>
+</svg>
+        </div>
+        <img id="lilcy-head" class="lc-head m-normal" src="mascot-normal.png" alt="Lil Cy" draggable="false">
+        <div class="lc-belly" onclick="lilCyBelly(event)"></div>
+    </div>
+    <button type="button" class="lc-close" onclick="setLilCyHidden(true)" aria-label="Hide Lil Cy" title="Hide Lil Cy">×</button>
+</div>
+
+<!-- SCROLL TO TOP -->
+<button
+    id="scroll-top-btn"
+    type="button"
+    aria-label="Scroll to top"
+    title="Back to top"
+    onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+    style="position:fixed; right:1rem; bottom:5.5rem; z-index:40; width:2.75rem; height:2.75rem; display:none; align-items:center; justify-content:center; border-radius:9999px; border:0; cursor:pointer; background:#059669; color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.35);"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+    (function () {
+        const btn = document.getElementById('scroll-top-btn');
+        if (!btn) return;
+        function update() {
+            btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+    })();
 </script>
 
 </body>
