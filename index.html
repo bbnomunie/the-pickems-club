@@ -2448,19 +2448,38 @@ supabaseClient.auth.onAuthStateChange(
 
     // Redraws "THE PICKEMS CLUB" one letter at a time. Safe to call
     // more than once (e.g. re-login) since it just rebuilds the spans.
-    function animateLogoDrawIn() {
+        function animateLogoDrawIn() {
         const el = document.getElementById('header-logo-text');
         if (!el) return;
 
         const text = el.textContent.trim();
         el.innerHTML = '';
 
-        text.split('').forEach((char, i) => {
-            const span = document.createElement('span');
-            span.className = 'logo-letter';
-            span.style.animationDelay = (i * 0.045) + 's';
-            span.textContent = char === ' ' ? '\u00A0' : char;
-            el.appendChild(span);
+        // Letters are grouped into words so the line can only wrap
+        // between words (never in the middle of "CLUB").
+        const words = text.split(/[\s\u00A0]+/);
+        let i = 0;
+
+        words.forEach((word, w) => {
+            const wordSpan = document.createElement('span');
+            wordSpan.style.display = 'inline-block';
+            wordSpan.style.whiteSpace = 'nowrap';
+
+            word.split('').forEach(char => {
+                const span = document.createElement('span');
+                span.className = 'logo-letter';
+                span.style.animationDelay = (i * 0.045) + 's';
+                span.textContent = char;
+                wordSpan.appendChild(span);
+                i++;
+            });
+
+            el.appendChild(wordSpan);
+
+            if (w < words.length - 1) {
+                el.appendChild(document.createTextNode(' '));
+                i++;
+            }
         });
     }
 
