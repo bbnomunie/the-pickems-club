@@ -3333,12 +3333,15 @@ supabaseClient.auth.onAuthStateChange(
         }
 
 
+        const previousPick = userPicks[gameId];
         userPicks[gameId] = team;
         picksDirty = true;
 
         renderGames();
 
         updateProgress();
+
+        try { lilCyReactToPick(game, team, previousPick); } catch (e) {}
 
     }
 
@@ -5024,6 +5027,184 @@ supabaseClient.auth.onAuthStateChange(
     }
 
     window.addEventListener('load', initLilCy);
+
+
+    // ------------------------------------------------------------
+    // LIL CY: PICK REACTIONS
+    // Lil Cy occasionally reacts when someone makes or changes a pick.
+    // Add-on only: if anything in here fails, picking is unaffected.
+    // Uses ESPN's betting line (fetched once per week) to tell favorites
+    // from underdogs; with no line available he just uses generic lines.
+    // ------------------------------------------------------------
+
+    const LILCY_PICK_LINES = {
+        underdog: [
+            { mood: 'oh',      text: "Yikes! I wouldn't have made that choice." },
+            { mood: 'scared',  text: "Whoa, {name}. You sure about that one?" },
+            { mood: 'laugh',   text: "Bold. Reckless, but bold." },
+            { mood: 'angry',   text: "The underdog? Really? Hope you like losing." },
+            { mood: 'oh',      text: "I'm not saying that pick is bad. I'm saying I'd hide it from your friends." },
+            { mood: 'sad',     text: "I'll light a candle for that pick." }
+        ],
+        favorite: [
+            { mood: 'happy',   text: "Good pick, you're actually thinking." },
+            { mood: 'happy',   text: "Look at you, picking like you've watched a game before." },
+            { mood: 'normal',  text: "Safe, smart, a little boring. I respect it." },
+            { mood: 'happy',   text: "Okay {name}, that one's actually solid." },
+            { mood: 'laugh',   text: "Following the crowd, huh? Works until it doesn't." }
+        ],
+        toss: [
+            { mood: 'normal',  text: "Coin flip, honestly. Good luck." },
+            { mood: 'oh',      text: "That game could go either way. Don't blame me." },
+            { mood: 'laugh',   text: "Ooh, a toss-up. This is where weeks get ruined." },
+            { mood: 'normal',  text: "Tough one. I'd flip a coin, but I'm tiny." }
+        ],
+        flip: [
+            { mood: 'laugh',   text: "Changing your mind already? Weak." },
+            { mood: 'oh',      text: "Flip-flopping, huh? That's how it starts." },
+            { mood: 'normal',  text: "Second-guessing yourself. Classic." },
+            { mood: 'scared',  text: "Don't overthink it, {name}!" }
+        ],
+        any: [
+            { mood: 'normal',  text: "Interesting choice. I'll remember that." },
+            { mood: 'happy',   text: "Locked in. Allegedly." },
+            { mood: 'laugh',   text: "I've seen worse. Not often, but I've seen worse." },
+            { mood: 'oh',      text: "Hmm. Okay, sure." },
+            { mood: 'normal',  text: "Noted. I'll be here when this goes wrong." },
+            { mood: 'angry',   text: "That's your pick? Bold of you to say it out loud." }
+        ],
+        last: [
+            { mood: 'happy',   text: "All picked! Now hit Save before you chicken out." },
+            { mood: 'laugh',   text: "Done already? Nothing counts until you hit Save." },
+            { mood: 'normal',  text: "Every game picked. Now press Save, {name}." }
+        ]
+    };
+
+    const LILCY_PICK_CHANCE = 0.35;       // chance he reacts to an ordinary pick
+    const LILCY_FLIP_CHANCE = 0.5;        // chance he reacts when a pick is changed
+    const LILCY_UNDERDOG_SPREAD = 6;      // points: picking a dog this big gets a "yikes"
+    const LILCY_FAVORITE_SPREAD = 3;      // points: picking a fav this big gets a "good pick"
+    const LILCY_TOSSUP_SPREAD = 2.5;      // points: closer than this counts as a toss-up
+
+    const lilCyPickState = { oddsKey: null, odds: {}, oddsPromise: null };
+
+    function lilCyLoadOdds(week) {
+        const season = Number(week.season_year);
+        const type = Number(week.season_type) || 2;
+        const num = Number(week.week_number);
+        const key = `${season}-${type}-${num}`;
+        if (lilCyPickState.oddsKey === key && lilCyPickState.oddsPromise) {
+            return lilCyPickState.oddsPromise;
+        }
+
+        lilCyPickState.oddsKey = key;
+        lilCyPickState.odds = {};
+        lilCyPickState.oddsPromise = (async () => {
+            const found = {};
+            try {
+                const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${season}&seasontype=${type}&week=${num}`);
+                if (!res.ok) throw new Error('odds request failed');
+                const json = await res.json();
+                for (const event of (Array.isArray(json.events) ? json.events : [])) {
+                    const comp = event.competitions?.[0];
+                    const competitors = comp?.competitors || [];
+                    const away = competitors.find(c => c.homeAway === 'away');
+                    const home = competitors.find(c => c.homeAway === 'home');
+                    const odds = comp?.odds?.[0];
+                    if (!away || !home || !odds) continue;
+
+                    const nameOf = c => c.team?.displayName || c.team?.abbreviation || '';
+                    const details = String(odds.details || '').trim();
+                    let fav = null;
+                    let spread = null;
+
+                    // Preferred: "KC -3.5" style text.
+                    const m = details.match(/^([A-Za-z.]+)\s+([+-]?\d+(?:\.\d+)?)$/);
+                    if (m) {
+                        const n = parseFloat(m[2]);
+                        const c = competitors.find(x => (x.team?.abbreviation || '').toLowerCase() === m[1].toLowerCase());
+                        if (c && n < 0) { fav = nameOf(c); spread = Math.abs(n); }
+                    } else if (/^(even|pk|pick)/i.test(details)) {
+                        spread = 0;
+                    }
+
+                    // Fallback: structured fields.
+                    if (spread === null && typeof odds.spread === 'number') {
+                        if (odds.homeTeamOdds?.favorite) fav = nameOf(home);
+                        else if (odds.awayTeamOdds?.favorite) fav = nameOf(away);
+                        if (fav) spread = Math.abs(odds.spread);
+                    }
+
+                    if (spread === null) continue;
+                    found[String(event.id)] = { fav, spread };
+                }
+                if (lilCyPickState.oddsKey === key) lilCyPickState.odds = found;
+            } catch (e) {
+                // Allow a retry later (not on every click) if the lookup failed.
+                setTimeout(() => {
+                    if (lilCyPickState.oddsKey === key) lilCyPickState.oddsPromise = null;
+                }, 5 * 60 * 1000);
+            }
+        })();
+        return lilCyPickState.oddsPromise;
+    }
+
+    function lilCyPickBucket(game, team, previousPick) {
+        if (previousPick && previousPick !== team) return 'flip';
+
+        const info = lilCyPickState.odds[String(game.id)];
+        if (!info) return 'any';
+
+        // Mix in some plain random lines so he doesn't feel scripted.
+        if (Math.random() < 0.2) return 'any';
+
+        if (info.spread < LILCY_TOSSUP_SPREAD) return 'toss';
+        if (!info.fav) return 'any';
+
+        const pickedFavorite = info.fav === team;
+        if (pickedFavorite && info.spread >= LILCY_FAVORITE_SPREAD) return 'favorite';
+        if (!pickedFavorite && info.spread >= LILCY_UNDERDOG_SPREAD) return 'underdog';
+        return 'any';
+    }
+
+    async function lilCyReactToPick(game, team, previousPick) {
+        try {
+            if (!game || !currentWeek || !lilCyCanShow()) return;
+
+            // Start the (cached) odds lookup in the background right away.
+            const oddsLoading = lilCyLoadOdds(currentWeek);
+
+            const bubble = document.getElementById('lilcy-bubble');
+            if (bubble && bubble.classList.contains('show')) return;
+
+            const justFinished = !previousPick &&
+                currentGames.length > 0 &&
+                currentGames.every(g => userPicks[g.id]);
+
+            const flipped = !!previousPick && previousPick !== team;
+            if (!justFinished && Math.random() >= (flipped ? LILCY_FLIP_CHANCE : LILCY_PICK_CHANCE)) return;
+
+            // Give the odds a moment to arrive so the first reaction can use them.
+            if (!justFinished && !flipped && !lilCyPickState.odds[String(game.id)]) {
+                await Promise.race([oddsLoading, new Promise(r => setTimeout(r, 1500))]);
+                if (!lilCyCanShow()) return;
+            }
+
+            const bucket = justFinished ? 'last' : lilCyPickBucket(game, team, previousPick);
+            const pool = LILCY_PICK_LINES[bucket] || LILCY_PICK_LINES.any;
+            let candidates = pool.filter(l => !lilCy.recent.includes(l.text));
+            if (!candidates.length) candidates = pool;
+            const choice = candidates[Math.floor(Math.random() * candidates.length)];
+
+            lilCy.recent.push(choice.text);
+            if (lilCy.recent.length > 8) lilCy.recent.shift();
+
+            lilCySay({ mood: choice.mood, text: lilCyFill(choice.text) });
+            lilCySchedule();
+        } catch (e) {
+            // Never let the mascot interfere with making picks.
+        }
+    }
 
 
     // ------------------------------------------------------------
