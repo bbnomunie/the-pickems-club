@@ -4628,86 +4628,32 @@ supabaseClient.auth.onAuthStateChange(
     // Edit these lists to change what Lil Cy says.
     // Tokens: {name} = player's first name, {week} = current week name.
     // Moods: normal, happy, sad, angry, scared, laugh, oh.
+    // Optional phase: ['open','locked','live','final'] limits WHEN a line may
+    // be said (open = before lock, locked = locked but no kickoff yet,
+    // live = games underway, final = every game decided). No phase = any time.
+    //
+    // This pool is only for lines that are always TRUE: Lil Cy being Lil Cy,
+    // or real site rules. Anything about what is actually happening in the
+    // pool (standings, results, who is where) belongs in lilCyContextLines()
+    // / lilCyStateLines() / lilCyResultLines(), which are built from real data.
     const LILCY_LINES = [
-        // friendly
-        { mood: 'happy',  text: "Hey {name}! Lil Cy here. Make some good picks today." },
-        { mood: 'happy',  text: "Good luck this week, {name}. I'm rooting for you. Mostly." },
+        // Lil Cy being Lil Cy
         { mood: 'happy',  text: "Big head, tiny body, huge heart." },
-        { mood: 'happy',  text: "Trustme, it's a foam finger, not a middle finger." },
-        { mood: 'happy',  text: "Every champion started with a terrible Week 1." },
+        { mood: 'happy',  text: "Trust me, it's a foam finger, not a middle finger." },
         { mood: 'happy',  text: "I'm available for high fives. Foam finger's ready. #1!" },
-        { mood: 'happy',  text: "Friendly reminder: Your Monday night tie breaker and picks are 2 different saves." },
-        { mood: 'happy',  text: "Nice work out there, {name}. Keep it up." },
-        { mood: 'happy',  text: "Pro tip: making your picks before lock is the secret. You're welcome." },
-        { mood: 'happy',  text: "Shoutout to everyone in this pool. Even the ones about to lose to me." },
-        { mood: 'happy',  text: "A great week is one pick away, {name}." },
-        { mood: 'happy',  text: "You've got this, {name}. Probably. Maybe. I believe!" },
-        { mood: 'happy',  text: "Good vibes only. Okay, good vibes and a little trash talk." },
-        { mood: 'happy',  text: "This pool is better with you in it, {name}." },
-        { mood: 'happy',  text: "Another week, another chance to be right about something." },
-        { mood: 'happy',  text: "Thanks for reading my bubble. That counts as a pick." },
-        { mood: 'normal', text: "Hydrate. Stretch. Pick your games. In that order." },
-        { mood: 'normal', text: "It's just for fun. Except the bragging rights. Those are forever." },
-        { mood: 'normal', text: "You miss 100% of the picks you don't make." },
-        { mood: 'normal', text: "Check the Picks Board after lock. The gossip is half the fun." },
-        { mood: 'normal', text: "Fun fact: I have no neck. Still pick better than half of you fools." },
-        { mood: 'normal', text: "Tiebreaker tip: it's the combined score of the Monday night game." },
         { mood: 'normal', text: "Tap my face for more wisdom. Or less. Mostly less." },
-        { mood: 'normal', text: "Be nice to whoever is in last place. They've suffered enough." },
-        { mood: 'normal', text: "Underdog picks win weeks. Also lose them. Mostly lose them." },
-        { mood: 'normal', text: "Sunday plan: snacks, picks, beer, regret. Maybe not in that order." },
-        { mood: 'normal', text: "Everybody's a genius until Sunday afternoon." },
-        // trash talk
-        { mood: 'angry',  text: "Somebody in this pool is picking with their heart. It's showing." },
-        { mood: 'angry',  text: "Bold strategy: ignore every stat and trust the vibes. How's that going?" },
-        { mood: 'angry',  text: "Nobody is safe this week. Not even you, {name}." },
-        { mood: 'angry',  text: "Picking the underdog again? Bold. Usually wrong, but bold." },
-        { mood: 'angry',  text: "Winning the weekly pool is easy. You should try it sometime." },
-        { mood: 'angry',  text: "Your confidence is impressive. Your record, less so." },
-        { mood: 'angry',  text: "I've seen better picks from a coin flip. The coin was winning." },
-        { mood: 'angry',  text: "If picks were a sport, some of you would still be in the preseason." },
-        { mood: 'angry',  text: "Somebody here has missed four weeks in a row. I'm not saying who. Okay, it might be you, {name}." },
-        { mood: 'angry',  text: "You call that a strategy? I call that Tuesday regret." },
-        { mood: 'angry',  text: "Your picks are a cry for help. A funny one." },
-        { mood: 'angry',  text: "Sit down, {name}. Nobody is a lock of the week." },
-        { mood: 'laugh',  text: "Ha! Imagine picking the home team just because it's home." },
-        { mood: 'laugh',  text: "I'm not laughing at you, {name}. I'm laughing near you." },
-        { mood: 'laugh',  text: "That pick you just made? I felt it from here. Ha!" },
-        { mood: 'laugh',  text: "Last week called. It wants its bad picks back." },
-        { mood: 'laugh',  text: "Pick the favorite, they said. It's safe, they said. Ha ha ha." },
-        { mood: 'laugh',  text: "I can't look. Okay, I'm looking. This is great." },
-        { mood: 'laugh',  text: "Monday night tiebreaker guesses are my favorite. So much chaos." },
-        { mood: 'normal', text: "My grandma picks better, and she thinks the Bears are a zoo thing." },
-        { mood: 'normal', text: "Tiebreaker tip: guess a number, then watch it be wrong anyway." },
-        { mood: 'normal', text: "I picked all my games in 4 seconds. Same result as you, probably." },
-        { mood: 'normal', text: "My foam finger says #1. Yours says participant." },
-        { mood: 'normal', text: "If I had a dollar for every bad pick in this pool, I'd win the entry fees back." },
+        { mood: 'normal', text: "Fun fact: I have no neck. Turning to watch the game is a full-body commitment." },
         { mood: 'normal', text: "Trash talk is just love with better sound effects." },
-        { mood: 'sad',    text: "Last place gets nothing but my deepest sympathy." },
-        { mood: 'sad',    text: "I don't always pick the favorite. When I do, I still lose." },
-        { mood: 'sad',    text: "Some of you pick with confidence. Others with prayer. I respect the prayer." },
-        { mood: 'scared', text: "Your picks make me want to pull my beanie over my eyes." },
-        { mood: 'scared', text: "Wait, picks lock soon? Did I leave the stove on? Did YOU pick?" },
-        { mood: 'scared', text: "I've seen the standings. Some of you should look away." },
-        // edgy trash talk
-        { mood: 'angry', text: "{name}, your picks are so bad the Picks Board should come with a warning label." },
-        { mood: 'laugh', text: "I'd say good luck, but we both know luck isn't the problem." },
-        { mood: 'laugh', text: "I love hang over Mondays!." },
-        { mood: 'angry', text: "You pick like you're allergic to winning. Impressive consistency, though." },
-        { mood: 'laugh', text: "Fantasy football called. Even they don't want your opinions." },
-        { mood: 'angry', text: "If bad picks paid out, {name}, you'd be in the black by now." },
-        { mood: 'angry', text: "Heads up: the pool trophy has a seat reserved for someone. Not you." },
-        { mood: 'laugh', text: "I've seen sharper picks from a guy who thinks a field goal is a soccer term. Wait, is it?" },
-        { mood: 'angry', text: "Go ahead, trust your gut. It's wrong, but go ahead." },
-        // surprised
-        { mood: 'oh', text: "Ohhh. Did you see that pick? OH." },
-        { mood: 'oh', text: "Wait, you picked THAT team?!" },
-        { mood: 'oh', text: "Whoa, somebody's on a hot streak. Is it you, {name}?" },
-        { mood: 'oh', text: "Plot twist: the underdog won. Again." },
-        { mood: 'oh', text: "OH! Is that a perfect week I smell?" },
-        { mood: 'oh', text: "Hold on. A tiebreaker decided by one point? Oh boy." },
-        { mood: 'oh', text: "Ooooh, spicy. That upset is going to wreck some picks." },
-        { mood: 'oh', text: "Wait, {name}, you can pick more than one favorite? ...No? Okay." }
+        { mood: 'laugh',  text: "I'm not laughing at you, {name}. I'm laughing near you." },
+        { mood: 'normal', text: "My grandma picks better, and she thinks the Bears are a zoo thing." },
+        { mood: 'laugh',  text: "I've seen sharper picks from a guy who thinks a field goal is a soccer term. Wait, is it?" },
+        { mood: 'normal', text: "My foam finger says #1. Yours says participant." },
+        // real site rules, before the lock
+        { mood: 'happy',  text: "Heads up: your picks and your tiebreaker save separately. Hit Save Picks AND Save Score.", phase: ['open'] },
+        { mood: 'normal', text: "The whole week locks at once, not game by game. Don't wait for kickoff.", phase: ['open'] },
+        // after the lock
+        { mood: 'happy',  text: "Picks are locked. The Picks Board shows who took which side. The gossip is half the fun.", phase: ['locked', 'live', 'final'] },
+        { mood: 'laugh',  text: "I can't look. Okay, I'm looking. This is great.", phase: ['live'] }
     ];
 
     const lilCy = {
@@ -4739,11 +4685,495 @@ supabaseClient.auth.onAuthStateChange(
         return `${days}d ${hours % 24}h`;
     }
 
+
+    // ------------------------------------------------------------
+    // LIL CY: WEEK PHASE + WINNER AWARENESS
+    // Add-on helpers. Everything here is wrapped so a failure just
+    // means Lil Cy falls back to his older behavior.
+    // ------------------------------------------------------------
+
+    // Where is a week in its life?
+    //   open   - before the picks lock
+    //   locked - locked, but no game has kicked off yet
+    //   live   - at least one game started, not every game decided
+    //   final  - every game has a winner (TIE / VOID count as decided)
+    function lilCyWeekPhase(week = currentWeek, games = currentGames) {
+        if (!week || !Array.isArray(games) || !games.length) return null;
+        if (String(games[0].week_id) !== String(week.id)) return null;
+        if (!isWeekLocked(week)) return 'open';
+        if (games.every(g => g.winner)) return 'final';
+
+        const now = Date.now();
+        const started = games.some(g =>
+            g.winner || (g.kickoff_at && new Date(g.kickoff_at).getTime() <= now)
+        );
+        return started ? 'live' : 'locked';
+    }
+
+    // Same ordering rules as the weekly leaderboard: most wins, then the
+    // smallest tiebreaker distance. Returns what actually happened:
+    //   wins        - one player has the most wins outright
+    //   tiebreaker  - tied on wins, settled by the tiebreaker
+    //   pending     - tied on wins, tiebreaker total not posted yet
+    //   tied        - still tied (exact same distance, or nobody guessed)
+    function lilCyResolveWeek(rows, tiebreakerKnown) {
+        if (!Array.isArray(rows) || !rows.length) return null;
+
+        const wins = r => Number(r.correct_picks) || 0;
+        const dist = r => (r.tiebreaker_distance == null ? null : Number(r.tiebreaker_distance));
+
+        const top = Math.max(...rows.map(wins));
+        const leaders = rows.filter(r => wins(r) === top);
+
+        if (leaders.length === 1) {
+            const others = rows.filter(r => r !== leaders[0]).map(wins);
+            const second = others.length ? Math.max(...others) : null;
+            return { kind: 'wins', wins: top, winner: leaders[0], leaders, margin: second == null ? null : top - second };
+        }
+
+        const guessed = leaders.filter(r => dist(r) != null);
+        if (!guessed.length) {
+            return { kind: tiebreakerKnown ? 'tied' : 'pending', wins: top, leaders, winners: leaders, distance: null };
+        }
+
+        const sorted = [...guessed].sort((a, b) => dist(a) - dist(b));
+        const best = dist(sorted[0]);
+        const winners = sorted.filter(r => dist(r) === best);
+
+        if (winners.length === 1) {
+            const runnerUp = sorted.length > 1 ? dist(sorted[1]) : null;
+            return { kind: 'tiebreaker', wins: top, winner: sorted[0], leaders, distance: best, runnerUp };
+        }
+        return { kind: 'tied', wins: top, leaders, winners, distance: best };
+    }
+
+    // The most recent week whose picks have locked.
+    function lilCyFocusWeek() {
+        try {
+            if (!Array.isArray(weeks) || !weeks.length) return null;
+            const now = Date.now();
+            const locked = sortedWeeksAscending(weeks).filter(w =>
+                w.picks_lock_at && new Date(w.picks_lock_at).getTime() <= now
+            );
+            return locked.length ? locked[locked.length - 1] : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Cached result of the most recently locked week. The app moves on to
+    // the next week as soon as every game is decided, so Lil Cy looks the
+    // finished week up on his own instead of relying on the page's week.
+    const lilCyResults = { weekId: null, data: null, fetchedAt: 0, failedAt: 0, loading: false };
+
+    async function lilCyRefreshResults() {
+        const week = lilCyFocusWeek();
+        if (!week || lilCyResults.loading) return;
+
+        // While the focus week is also the page's week, only look it up once
+        // the page's own games say it's over (no extra requests mid-week).
+        if (currentWeek && String(currentWeek.id) === String(week.id) &&
+            lilCyWeekPhase(currentWeek, currentGames) !== 'final') {
+            return;
+        }
+
+        const now = Date.now();
+        const same = String(lilCyResults.weekId) === String(week.id) && lilCyResults.data;
+        if (same) {
+            const ttl = lilCyResults.data.final ? 15 * 60 * 1000 : 60 * 1000;
+            if (now - lilCyResults.fetchedAt < ttl) return;
+        }
+        if (now - lilCyResults.failedAt < 5 * 60 * 1000) return;
+
+        lilCyResults.loading = true;
+        try {
+            const [g, s, t] = await Promise.all([
+                supabaseClient.from('games').select('id, winner, kickoff_at').eq('week_id', week.id),
+                supabaseClient.from('week_standings').select('*').eq('week_id', week.id),
+                supabaseClient.from('week_tiebreakers').select('actual_total').eq('week_id', week.id).maybeSingle()
+            ]);
+            if (g.error || s.error || t.error) throw new Error('results lookup failed');
+
+            const games = g.data || [];
+            const final = games.length > 0 && games.every(x => x.winner);
+            const lastKickoff = games.reduce((m, x) => Math.max(m, x.kickoff_at ? new Date(x.kickoff_at).getTime() : 0), 0);
+            // No tiebreaker row means there is no total to wait for.
+            const tiebreakerKnown = !t.data || t.data.actual_total != null;
+
+            lilCyResults.weekId = week.id;
+            lilCyResults.fetchedAt = Date.now();
+            const voided = games.filter(x => x.winner === 'TIE' || x.winner === 'VOID').length;
+            lilCyResults.data = {
+                weekName: week.name,
+                final,
+                lastKickoff,
+                rows: s.data || [],
+                scoreable: games.length - voided,
+                result: final ? lilCyResolveWeek(s.data || [], tiebreakerKnown) : null
+            };
+        } catch (e) {
+            lilCyResults.failedAt = Date.now();
+        } finally {
+            lilCyResults.loading = false;
+        }
+    }
+
+    // Lines about who actually won a finished week.
+    function lilCyResultLines(lines) {
+        const res = lilCyResults.data;
+        if (!res || !res.final || !res.result) return;
+        if (Date.now() - res.lastKickoff > 4 * 24 * 3600 * 1000) return;
+
+        const r = res.result;
+        const wk = res.weekName;
+        const meId = currentUser?.id;
+        const name = lilCyFirstName();
+        const isMe = row => !!row && row.user_id === meId;
+        const nm = row => (row && row.display_name) || 'Somebody';
+        const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+        const dist = row => (row.tiebreaker_distance == null ? null : Number(row.tiebreaker_distance));
+        const add = (line, weight = 3) => { for (let i = 0; i < weight; i++) lines.push(line); };
+        const names = rows => {
+            const list = rows.map(nm);
+            if (list.length <= 2) return list.join(' and ');
+            return `${list[0]}, ${list[1]} and ${list.length - 2} other${list.length - 2 === 1 ? '' : 's'}`;
+        };
+
+        if (r.kind === 'wins') {
+            if (isMe(r.winner)) {
+                add({ mood: 'happy', text: `You won ${wk}, ${name}! ${plural(r.wins, 'win')} and nobody else got there. Don't let it go to your head. Mine's big enough for both of us.` });
+            } else {
+                add({ mood: 'angry', text: `${nm(r.winner)} won ${wk} with ${plural(r.wins, 'win')}. The rest of you can try again next week.` });
+            }
+        } else if (r.kind === 'tiebreaker') {
+            const losers = r.leaders.filter(x => x !== r.winner)
+                .sort((a, b) => (dist(a) ?? Infinity) - (dist(b) ?? Infinity));
+            const mine = losers.find(isMe);
+
+            if (isMe(r.winner)) {
+                const how = r.distance === 0 ? 'You nailed the tiebreaker exactly.' : `You were off by only ${r.distance} on the tiebreaker.`;
+                add({ mood: 'happy', text: `You won ${wk} on the tiebreaker, ${name}! ${how} Okay, that was impressive.` });
+            } else if (mine) {
+                const mineDist = dist(mine);
+                const detail = mineDist == null
+                    ? `You never made a tiebreaker guess, and ${nm(r.winner)} did.`
+                    : `You were off by ${mineDist}. They were off by ${r.distance}.`;
+                add({ mood: 'sad', text: `${nm(r.winner)} edged you out of ${wk} on the tiebreaker, ${name}. ${detail} Ouch.` });
+            } else {
+                add({ mood: 'oh', text: `${names(r.leaders)} all finished ${plural(r.wins, 'win')} in ${wk}. ${nm(r.winner)} was closest on the tiebreaker${r.distance === 0 ? ', exactly right' : ` (off by ${r.distance})`}. That's the win.` });
+            }
+
+            if (r.distance === 0) {
+                add({ mood: 'oh', text: `${nm(r.winner)} nailed the ${wk} tiebreaker exactly. That's witchcraft.` }, 2);
+            } else if (r.runnerUp != null && r.runnerUp - r.distance === 1) {
+                add({ mood: 'oh', text: `The ${wk} tiebreaker was decided by ONE point. One. ${nm(r.winner)} takes it.` }, 2);
+            }
+        } else if (r.kind === 'pending') {
+            add({ mood: 'oh', text: `${names(r.leaders)} are tied on wins in ${wk}. The tiebreaker total isn't in yet, so nobody celebrate.` });
+        } else if (r.kind === 'tied') {
+            const who = names(r.winners);
+            const why = r.distance != null
+                ? 'even on the tiebreaker'
+                : 'and nobody had a tiebreaker guess';
+            if (r.winners.some(isMe)) {
+                add({ mood: 'scared', text: `You're sharing first place in ${wk} with ${r.winners.length - 1 === 1 ? 'one other player' : `${r.winners.length - 1} others`}, ${name}, ${why}. Awkward.` });
+            } else {
+                add({ mood: 'oh', text: `${who} tied for first in ${wk}, ${why}. Share the glory or settle it in the parking lot.` });
+            }
+        }
+
+        // perfect weeks (a perfect week = every scoreable game right)
+        const rows = res.rows || [];
+        const scoreable = res.scoreable || 0;
+        if (scoreable >= 3 && rows.length) {
+            const perfect = rows.filter(x => (Number(x.correct_picks) || 0) === scoreable);
+            if (perfect.length) {
+                if (perfect.some(isMe)) {
+                    add({ mood: 'oh', text: `${scoreable}-0 in ${wk}, ${name}. A perfect week. I need to sit down.` }, 3);
+                } else {
+                    add({ mood: 'oh', text: `${names(perfect)} went a perfect ${scoreable}-0 in ${wk}.` }, 2);
+                }
+            } else if (scoreable >= 5) {
+                add({ mood: 'laugh', text: `Nobody went perfect in ${wk}. The best this week was ${r.wins} of ${scoreable}.` });
+            }
+        }
+
+        lines.priority = true;
+    }
+
+
+    // Lines about where the week stands RIGHT NOW. Every line here is
+    // computed from real data (games, picks, standings, pick counts), so
+    // nothing is said unless it is true.
+    function lilCyStateLines(lines, phase) {
+        if (!currentWeek || !Array.isArray(currentGames) || !currentGames.length || !phase) return;
+
+        const name = lilCyFirstName();
+        const wk = currentWeek.name;
+        const now = Date.now();
+        const meId = currentUser?.id;
+        const total = currentGames.length;
+        const pending = currentGames.filter(g => !g.winner);
+        const empty = currentGames.filter(g => !userPicks[g.id]).length;
+        const myPick = g => userPicks[g.id] || null;
+        const label = g => `${g.away_team} at ${g.home_team}`;
+        const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+        const isVoid = w => (typeof isVoidWinner === 'function') ? isVoidWinner(w) : (w === 'TIE' || w === 'VOID');
+        const add = (line, weight = 1) => { for (let i = 0; i < weight; i++) lines.push(line); };
+        const nameList = rows => {
+            const list = rows.map(r => r.display_name || 'Somebody');
+            if (list.length <= 2) return list.join(' and ');
+            return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
+        };
+        const isActualWeek = window.lilCyActualWeekId != null &&
+            String(currentWeek.id) === String(window.lilCyActualWeekId);
+
+        let anchors = [];
+        try { anchors = findTiebreakerGames(currentGames, currentWeek.season_type) || []; } catch (e) {}
+        const preseason = Number(currentWeek.season_type) === 1;
+        const anchorText = preseason
+            ? 'the final game'
+            : (anchors.length > 1 ? 'the Monday night games' : 'the Monday night game');
+
+        // ---- what your own picks look like (any phase) ----
+        const picked = currentGames.filter(g => myPick(g));
+        if (picked.length >= 6) {
+            const home = picked.filter(g => myPick(g) === g.home_team).length;
+            const away = picked.filter(g => myPick(g) === g.away_team).length;
+            if (home === picked.length) {
+                add({ mood: 'laugh', text: `You picked the home team in all ${picked.length} games, ${name}. Home cooking only?` });
+            } else if (away === picked.length) {
+                add({ mood: 'laugh', text: `All ${picked.length} road teams, ${name}? You really don't believe in home-field advantage.` });
+            } else if (picked.length >= 8 && home >= Math.ceil(picked.length * 0.75)) {
+                add({ mood: 'oh', text: `${home} of your ${picked.length} picks are home teams, ${name}. Noticing a theme.` });
+            } else if (picked.length >= 8 && away >= Math.ceil(picked.length * 0.75)) {
+                add({ mood: 'oh', text: `${away} of your ${picked.length} picks are road teams, ${name}. You love an away game.` });
+            }
+        }
+
+        // ---- before the lock ----
+        if (phase === 'open') {
+            if (currentWeek.picks_lock_at && Number.isFinite(new Date(currentWeek.picks_lock_at).getTime())) {
+                const t = formatGameTime(currentWeek.picks_lock_at);
+                add({ mood: 'normal', text: `${wk} locks ${t.day} at ${t.time}. Mark it down.` });
+            }
+
+            if (empty > 0) {
+                add({ mood: 'scared', text: `Save Picks is all-or-nothing, ${name}. With ${plural(empty, 'empty pick')}, none of your picks count yet.` }, 2);
+            } else if (picksDirty) {
+                add({ mood: 'scared', text: `Every game is picked, ${name}, but you haven't hit Save. Nothing counts until you do.` }, 3);
+            }
+
+            const tbInput = document.getElementById('tiebreaker-prediction');
+            if (tbInput && !tbInput.disabled && String(tbInput.value).trim() === '') {
+                add({ mood: 'scared', text: `No tiebreaker guess yet, ${name}. Skip it and anybody tied with you who guessed wins the tie.` }, 2);
+            }
+
+            if (anchors.length) {
+                add({ mood: 'normal', text: `Tiebreaker tip: closest to the combined score of ${anchorText} wins the tie. Over or under doesn't matter.` });
+            }
+        }
+
+        // ---- locked, nothing has kicked off ----
+        if (phase === 'locked') {
+            const kicks = pending
+                .map(g => (g.kickoff_at ? new Date(g.kickoff_at).getTime() : NaN))
+                .filter(t => Number.isFinite(t) && t > now);
+            if (kicks.length) {
+                add({ mood: 'normal', text: `${plural(total, 'game')} on the board for ${wk}. First kickoff is in ${lilCyTimeLeft(Math.min(...kicks) - now)}.` }, 2);
+            }
+        }
+
+        // ---- after the lock ----
+        if (phase !== 'open' && picked.length === 0) {
+            add({ mood: 'angry', text: `No picks in for ${wk}, ${name}? That's a zero before kickoff.` }, 2);
+        }
+
+        if (phase === 'live' && picked.length) {
+            const underway = pending.filter(g => g.kickoff_at && new Date(g.kickoff_at).getTime() <= now && myPick(g));
+            const upcoming = pending
+                .filter(g => g.kickoff_at && new Date(g.kickoff_at).getTime() > now && myPick(g))
+                .sort((x, y) => new Date(x.kickoff_at) - new Date(y.kickoff_at));
+
+            if (underway.length) {
+                const g = underway[Math.floor(Math.random() * underway.length)];
+                add({ mood: 'scared', text: `No final yet in ${label(g)}. You're riding with ${myPick(g)}, ${name}.` });
+            }
+            if (upcoming.length) {
+                const g = upcoming[0];
+                add({ mood: 'normal', text: `Next up in ${lilCyTimeLeft(new Date(g.kickoff_at).getTime() - now)}: ${label(g)}. You took ${myPick(g)}.` });
+            }
+            add({ mood: 'normal', text: `${plural(total - pending.length, 'game')} down, ${pending.length} to go in ${wk}.` });
+        }
+
+        // ---- what the whole pool picked (only exists after the lock) ----
+        if (phase !== 'open') {
+            const counts = (typeof weekPickCounts === 'object' && weekPickCounts) ? weekPickCounts : {};
+            const poolLines = [];
+
+            currentGames.forEach(g => {
+                const c = counts[g.id];
+                if (!c || c.total < 6) return;
+                const T = c.total;
+                const away = c[g.away_team] || 0;
+                const home = c[g.home_team] || 0;
+                const mine = myPick(g);
+                const mineN = mine ? (c[mine] || 0) : 0;
+
+                if (!g.winner) {
+                    if (mine && mineN === 1) {
+                        poolLines.push({ mood: 'oh', text: `Nobody else took ${mine} in ${label(g)}, ${name}. You're out there alone.` });
+                    } else if (mine && mineN / T <= 0.2) {
+                        poolLines.push({ mood: 'oh', text: `Only ${mineN} of ${T} players took ${mine} in ${label(g)}. Lone wolf energy, ${name}.` });
+                    }
+                    if (away === T || home === T) {
+                        const team = away === T ? g.away_team : g.home_team;
+                        poolLines.push({ mood: 'laugh', text: `All ${T} players took ${team} in ${label(g)}. If that one flips, the whole pool goes down together.` });
+                    }
+                } else if (!isVoid(g.winner)) {
+                    const w = g.winner;
+                    const loser = w === g.home_team ? g.away_team : g.home_team;
+                    const wn = c[w] || 0;
+                    const crowd = wn === 0 ? 'nobody picked them' : `only ${wn} of ${T} players picked them`;
+
+                    if (wn / T <= 0.25) {
+                        poolLines.push({ mood: 'oh', text: `${w} beat ${loser} and ${crowd}.` });
+                        poolLines.push({ mood: 'oh', text: `${w} beat ${loser} and ${crowd}.` });
+                    }
+                    if (mine === w && wn / T <= 0.25) {
+                        poolLines.push({ mood: 'happy', text: `You called ${w} over ${loser} when ${crowd}, ${name}. Okay, genius.` });
+                    }
+                    if (mine && mine !== w && mineN / T >= 0.6) {
+                        poolLines.push({ mood: 'sad', text: `${mineN} of ${T} players took ${mine} and it lost. At least you didn't fall alone, ${name}.` });
+                    }
+                }
+            });
+
+            // Keep a few at random so one busy week doesn't drown out everything else.
+            poolLines.sort(() => Math.random() - 0.5).slice(0, 3).forEach(l => lines.push(l));
+        }
+
+        // ---- season record (any phase) ----
+        const season = window.lilCyStandings;
+        if (Array.isArray(season) && season.length >= 3) {
+            const me = season.find(r => r.user_id === meId);
+            if (me) {
+                const done = Number(me.completed_picks) || 0;
+                const right = Number(me.correct_picks) || 0;
+                const wrong = Math.max(0, done - right);
+
+                if (done >= 20) {
+                    const pct = Math.round((right / done) * 100);
+                    if (pct < 50) {
+                        add({ mood: 'angry', text: `${right}-${wrong} on the season, ${name}. A coin flip gets you 50%. You're at ${pct}%.` });
+                    } else if (pct >= 65) {
+                        add({ mood: 'laugh', text: `${pct}% on the season, ${name}. I'm not saying you're cheating. I'm saying someone should look into it.` });
+                    }
+                }
+
+                const topWins = Math.max(...season.map(r => Number(r.correct_picks) || 0));
+                const behind = topWins - right;
+                if (behind >= 1 && behind <= 3) {
+                    add({ mood: 'oh', text: `You're ${plural(behind, 'win')} off the pool lead, ${name}. Close enough to be annoying.` });
+                }
+            }
+        }
+
+        // ---- the in-between moments: the week is live and standings are loaded ----
+        const wkStand = window.lilCyWeekStandings;
+        const haveRows = isActualWeek && wkStand && String(wkStand.weekId) === String(currentWeek.id) &&
+            Array.isArray(wkStand.rows) && wkStand.rows.length;
+
+        if (phase === 'live' && haveRows && pending.length > 0) {
+            const rows = wkStand.rows;
+            const R = pending.length;
+            const winsOf = r => Number(r.correct_picks) || 0;
+            const doneOf = r => Number(r.completed_picks) || 0;
+            const L = Math.max(...rows.map(winsOf));
+            const leaders = rows.filter(r => winsOf(r) === L);
+            const mine = rows.find(r => r.user_id === meId);
+            // Most wins anybody could still reach is their wins + games left.
+            const alive = rows.filter(r => winsOf(r) + R >= L);
+            const myPending = pending.filter(g => userPicks[g.id]).length;
+            const myMax = mine ? winsOf(mine) + myPending : null;
+
+            // clinched: nobody else can even tie the leader
+            if (leaders.length === 1 && alive.length === 1 && L > R) {
+                if (leaders[0].user_id === meId) {
+                    add({ mood: 'happy', text: `You've clinched ${wk}, ${name}, with ${plural(R, 'game')} still to play. Nobody can catch you.` }, 3);
+                } else {
+                    add({ mood: 'angry', text: `${leaders[0].display_name || 'Somebody'} has clinched ${wk} with ${plural(R, 'game')} still to go. The rest of you are playing for second.` }, 3);
+                }
+                lines.priority = true;
+            } else {
+                // you can't catch the leader anymore
+                if (mine && myMax < L) {
+                    add({ mood: 'sad', text: `You're mathematically out of ${wk}, ${name}. ${plural(R, 'game')} left and you're ${plural(L - winsOf(mine), 'win')} behind the lead. Root for chaos anyway.` }, 3);
+                    lines.priority = true;
+                }
+
+                // only a few people are still alive
+                if (alive.length >= 2 && alive.length <= 3 && rows.length >= 6) {
+                    if (mine && alive.includes(mine)) {
+                        add({ mood: 'scared', text: `You're one of only ${alive.length} players who can still win ${wk}, ${name}. No pressure.` }, 2);
+                    } else {
+                        add({ mood: 'oh', text: `Only ${nameList(alive)} can still win ${wk}${R === 1 ? `, and there's one game left: ${label(pending[0])}` : ''}.` }, 2);
+                    }
+                } else if (alive.length > 3) {
+                    const out = rows.length - alive.length;
+                    if (out >= rows.length / 2) {
+                        add({ mood: 'laugh', text: `${out} of ${rows.length} players are already out of the running in ${wk}.` });
+                    }
+                }
+
+                // one game left and you're still in it
+                if (R === 1 && mine && myMax >= L && myPick(pending[0])) {
+                    const g = pending[0];
+                    const gap = L - winsOf(mine);
+                    if (gap === 0) {
+                        add({ mood: 'scared', text: `One game left in ${wk}: ${label(g)}. You're level for the lead and you took ${myPick(g)}. Breathe, ${name}.` }, 3);
+                    } else {
+                        add({ mood: 'oh', text: `One game left in ${wk}: ${label(g)}. You're ${plural(gap, 'win')} behind the lead, ${name}, and you took ${myPick(g)}. Your move, ${myPick(g)}.` }, 3);
+                    }
+                    lines.priority = true;
+                }
+            }
+
+            // only the tiebreaker game(s) are left
+            const anchorIds = anchors.map(g => String(g.id));
+            if (anchorIds.length && pending.every(g => anchorIds.includes(String(g.id)))) {
+                if (leaders.length >= 2) {
+                    add({ mood: 'oh', text: `${nameList(leaders.slice(0, 3))}${leaders.length > 3 ? ' and others' : ''} are tied on wins in ${wk}, and only ${anchorText} is left. The tiebreaker is about to matter.` }, 3);
+                    lines.priority = true;
+                }
+                const tbInput = document.getElementById('tiebreaker-prediction');
+                const guess = tbInput ? String(tbInput.value).trim() : '';
+                if (guess !== '' && Number.isFinite(Number(guess))) {
+                    add({ mood: 'normal', text: `Only ${anchorText} is left in ${wk}, ${name}. You guessed ${guess} total points, so root accordingly.` }, 2);
+                } else if (tbInput && guess === '') {
+                    add({ mood: 'sad', text: `Only ${anchorText} is left in ${wk} and you never entered a tiebreaker guess, ${name}. Rough.` });
+                }
+            }
+
+            // perfect so far
+            const perfect = rows.filter(r => doneOf(r) >= 3 && winsOf(r) === doneOf(r));
+            if (perfect.length === 1 && perfect[0].user_id !== meId) {
+                add({ mood: 'oh', text: `${perfect[0].display_name || 'Somebody'} is ${winsOf(perfect[0])}-0 in ${wk}. Let's see how long that lasts.` });
+            } else if (perfect.length >= 2) {
+                add({ mood: 'oh', text: `${perfect.length} players are still perfect in ${wk}. That list only gets shorter from here.` });
+            }
+        }
+    }
+
     // Lines that depend on what's happening in the pool right now.
     function lilCyContextLines() {
         const lines = [];
         const name = lilCyFirstName();
         const now = Date.now();
+        const phase = lilCyWeekPhase();
+
+        // Background lookup of the latest finished week (throttled + cached).
+        try { lilCyRefreshResults(); } catch (e) {}
 
         if (currentWeek && currentGames?.length) {
             const lockMs = new Date(currentWeek.picks_lock_at).getTime() - now;
@@ -4752,19 +5182,24 @@ supabaseClient.auth.onAuthStateChange(
                 const empty = currentGames.filter(g => !userPicks[g.id]).length;
 
                 if (empty > 0) {
-                    const left = lilCyTimeLeft(lockMs);
-                    const urgent = lockMs < 3 * 3600 * 1000;
+                    const hasLock = Number.isFinite(lockMs);
+                    const left = hasLock ? lilCyTimeLeft(lockMs) : '';
+                    const urgent = hasLock && lockMs < 3 * 3600 * 1000;
                     const plural = empty === 1 ? 'pick' : 'picks';
-                    const text = urgent
-                        ? `${name}!! ${empty} empty ${plural} and ${currentWeek.name} locks in ${left}!`
-                        : `${name}, you still have ${empty} empty ${plural} for ${currentWeek.name}. Locks in ${left}.`;
+                    const text = !hasLock
+                        ? `${name}, you still have ${empty} empty ${plural} for ${currentWeek.name}.`
+                        : urgent
+                            ? `${name}!! ${empty} empty ${plural} and ${currentWeek.name} locks in ${left}!`
+                            : `${name}, you still have ${empty} empty ${plural} for ${currentWeek.name}. Locks in ${left}.`;
                     // weighted heavily so reminders actually show up
                     const mood = urgent ? 'scared' : 'angry';
                     for (let i = 0; i < 3; i++) lines.push({ mood, text });
                 } else {
-                    lines.push({ mood: 'happy', text: `All picks are in for ${currentWeek.name}. Look at you being responsible, ${name}.` });
+                    if (!picksDirty) {
+                        lines.push({ mood: 'happy', text: `All picks are in for ${currentWeek.name}. Look at you being responsible, ${name}.` });
+                    }
                 }
-            } else {
+            } else if (phase !== 'final') {
                 lines.push({ mood: 'angry',  text: `${currentWeek.name} is locked. No take-backs, ${name}.` });
                 lines.push({ mood: 'normal', text: `Picks are locked. Go see who picked the same as you on the Picks Board.` });
             }
@@ -4776,16 +5211,31 @@ supabaseClient.auth.onAuthStateChange(
             const last = standings[standings.length - 1];
             const meId = currentUser?.id;
 
-            if (leader.user_id === meId) {
-                lines.push({ mood: 'happy', text: `You're #1 in the pool, ${name}. Don't let it go to your head. Mine's big enough for both of us.` });
-            } else if (leader.display_name) {
-                lines.push({ mood: 'angry', text: `${leader.display_name} is leading the pool. Suspicious.` });
-            }
+            const seasonWins = r => Number(r.correct_picks) || 0;
+            const seasonTop = standings.filter(r => seasonWins(r) === seasonWins(leader));
+            const seasonBottom = standings.filter(r => seasonWins(r) === seasonWins(last));
+            const everyoneTied = seasonTop.length === standings.length;
 
-            if (last.user_id === meId) {
-                lines.push({ mood: 'sad', text: `Last place, ${name}? I believe in you. Barely.` });
-            } else if (last.display_name) {
-                lines.push({ mood: 'laugh', text: `${last.display_name} is in last place. Bless their heart.` });
+            if (!everyoneTied) {
+                if (seasonTop.length === 1) {
+                    if (leader.user_id === meId) {
+                        lines.push({ mood: 'happy', text: `You're #1 in the pool, ${name}. Don't let it go to your head. Mine's big enough for both of us.` });
+                    } else if (leader.display_name) {
+                        lines.push({ mood: 'angry', text: `${leader.display_name} is leading the pool. Suspicious.` });
+                    }
+                } else if (seasonTop.some(r => r.user_id === meId)) {
+                    lines.push({ mood: 'scared', text: `You're tied for the pool lead, ${name}. Don't choke.` });
+                } else if (seasonTop[0].display_name && seasonTop[1].display_name) {
+                    lines.push({ mood: 'oh', text: `${seasonTop[0].display_name} and ${seasonTop[1].display_name} are tied for the pool lead. Somebody's about to blink.` });
+                }
+
+                if (seasonBottom.length === 1) {
+                    if (last.user_id === meId) {
+                        lines.push({ mood: 'sad', text: `Last place, ${name}? I believe in you. Barely.` });
+                    } else if (last.display_name) {
+                        lines.push({ mood: 'laugh', text: `${last.display_name} is in last place. Bless their heart.` });
+                    }
+                }
             }
         }
 
@@ -4806,19 +5256,25 @@ supabaseClient.auth.onAuthStateChange(
             const leader = rows[0];
             const tiedFirst = rows.filter(r => wins(r) === wins(leader));
             const mine = rows.find(r => r.user_id === meId);
+            // Once every game is decided the tiebreaker has settled things;
+            // lilCyResultLines() handles the real winner, so skip "leader" talk.
+            const weekOver = phase === 'final';
 
             // first place
-            if (tiedFirst.length === 1) {
+            if (weekOver) {
+                // handled by lilCyResultLines()
+            } else if (tiedFirst.length === 1) {
                 if (leader.user_id === meId) {
-                    lines.push({ mood: 'happy', text: `You're on top of ${wkName}, ${name}. Enjoy it. Monday night is coming.` });
+                    const gamesLeft = currentGames.filter(g => !g.winner).length;
+                    lines.push({ mood: 'happy', text: `You're on top of ${wkName}, ${name}. Enjoy it. ${gamesLeft} game${gamesLeft === 1 ? '' : 's'} still to play.` });
                 } else if (leader.display_name) {
                     lines.push({ mood: 'angry', text: `${leader.display_name} is leading ${wkName} with ${plural(wins(leader), 'win')}. Suspicious.` });
                 }
             } else if (tiedFirst.length >= 2) {
                 if (mine && tiedFirst.includes(mine)) {
-                    lines.push({ mood: 'scared', text: `You're tied for first in ${wkName}, ${name}. Don't choke.` });
+                    lines.push({ mood: 'scared', text: `You're tied for the lead in ${wkName}, ${name}. Don't choke.` });
                 } else if (tiedFirst[0].display_name && tiedFirst[1].display_name) {
-                    lines.push({ mood: 'oh', text: `${tiedFirst[0].display_name} and ${tiedFirst[1].display_name} are tied for first in ${wkName}. The tiebreaker is going to be chaos.` });
+                    lines.push({ mood: 'oh', text: `${tiedFirst[0].display_name} and ${tiedFirst[1].display_name} are tied for the lead in ${wkName}. The tiebreaker is going to be chaos.` });
                 }
             }
 
@@ -4834,8 +5290,8 @@ supabaseClient.auth.onAuthStateChange(
                 }
             }
 
-            // close race between 1st and 5th
-            if (rows.length >= 5) {
+            // close race between 1st and 5th (pointless once the week is over)
+            if (!weekOver && rows.length >= 5) {
                 const gap = wins(leader) - wins(rows[4]);
                 if (gap === 0) {
                     lines.push({ mood: 'oh', text: `The top five are all tied in ${wkName}. This is going to be a mess.` });
@@ -4874,11 +5330,31 @@ supabaseClient.auth.onAuthStateChange(
             }
         }
 
+        // Who actually won the most recently finished week (tiebreaker aware).
+        try { lilCyResultLines(lines); } catch (e) {}
+        try { lilCyStateLines(lines, phase); } catch (e) {}
+
+        // Day-of-week lines only when they match where the week really is.
         const day = new Date().getDay();
-        if (day === 4) lines.push({ mood: 'scared', text: "Thursday night football means an early lock. Pick now!" });
-        if (day === 0) lines.push({ mood: 'scared', text: "Sunday football. Everything is fine. Everything is fine." });
-        if (day === 1) lines.push({ mood: 'angry',  text: "Monday night. The tiebreaker is watching you." });
-        if (day === 2) lines.push({ mood: 'normal', text: "Tuesday: time to see who got humbled this week." });
+        const stillOpen = phase === 'open';
+        const underway = phase === 'locked' || phase === 'live';
+        const lockLeft = currentWeek?.picks_lock_at
+            ? new Date(currentWeek.picks_lock_at).getTime() - now
+            : NaN;
+        const hasEmpty = Array.isArray(currentGames) && currentGames.some(g => !userPicks[g.id]);
+
+        if (day === 4) {
+            if (stillOpen && hasEmpty && lockLeft > 0 && lockLeft < 24 * 3600 * 1000) {
+                lines.push({ mood: 'scared', text: "Thursday night football means an early lock. Pick now!" });
+            } else if (underway) {
+                lines.push({ mood: 'laugh', text: "Thursday night football is on and your picks are locked. All you can do now is yell at the TV." });
+            }
+        }
+        if (day === 0 && underway) lines.push({ mood: 'scared', text: "Sunday football. Everything is fine. Everything is fine." });
+        if (day === 1 && underway) lines.push({ mood: 'angry',  text: "Monday night. The tiebreaker is watching you." });
+	if (day === 1) lines.push({ mood: 'laugh', text: "Hang over Mondays! If you know, you know! 🤢" });
+	if (day === 1) lines.push({ mood: 'laugh', text: "Hang over Mondays! If you know, you know! 🤢" });
+
 
         // theme-aware lines (reads whichever theme is on right now)
         const hour = new Date().getHours();
@@ -4898,30 +5374,41 @@ supabaseClient.auth.onAuthStateChange(
         return lines;
     }
 
+    // Generic lines that make sense for where the week is right now.
+    function lilCyBaseLines() {
+        const phase = lilCyWeekPhase();
+        const ok = LILCY_LINES.filter(l => !l.phase || (phase && l.phase.includes(phase)));
+        return ok.length ? ok : LILCY_LINES.filter(l => !l.phase);
+    }
+
     function lilCyPickLine() {
         const context = lilCyContextLines();
-        let pool = LILCY_LINES;
+        const base = lilCyBaseLines();
+        let pool = base;
 
         if (!lilCy.greeted) {
             lilCy.greeted = true;
             return { mood: 'happy', text: lilCyFill("Hey {name}! Lil Cy here. Tap me if you want trash talk. Just don't tap my belly!") };
         }
 
-        if (context.length && Math.random() < 0.55) pool = context;
+        // Fresh results (a decided week) get priority over random chatter.
+        const contextChance = context.priority ? 0.85 : 0.7;
+        if (context.length && Math.random() < contextChance) pool = context;
 
         // Prefer lines not said recently. If the contextual pool is used up,
         // fall back to the generic pool; never repeat the line just said.
         const fresh = arr => arr.filter(l => !lilCy.recent.includes(l.text));
         let candidates = fresh(pool);
-        if (!candidates.length) candidates = fresh(LILCY_LINES);
+        if (!candidates.length) candidates = fresh(base);
         if (!candidates.length) {
             const lastSaid = lilCy.recent[lilCy.recent.length - 1];
-            candidates = LILCY_LINES.filter(l => l.text !== lastSaid);
+            candidates = base.filter(l => l.text !== lastSaid);
         }
+        if (!candidates.length) candidates = base;
         const choice = candidates[Math.floor(Math.random() * candidates.length)];
 
         lilCy.recent.push(choice.text);
-        if (lilCy.recent.length > 8) lilCy.recent.shift();
+        if (lilCy.recent.length > 12) lilCy.recent.shift();
 
         return { mood: choice.mood, text: lilCyFill(choice.text) };
     }
@@ -5198,7 +5685,7 @@ supabaseClient.auth.onAuthStateChange(
             const choice = candidates[Math.floor(Math.random() * candidates.length)];
 
             lilCy.recent.push(choice.text);
-            if (lilCy.recent.length > 8) lilCy.recent.shift();
+            if (lilCy.recent.length > 12) lilCy.recent.shift();
 
             lilCySay({ mood: choice.mood, text: lilCyFill(choice.text) });
             lilCySchedule();
